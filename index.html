@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corrector de Expedientes — Practica de ortografia juridica</title>
+  <meta name="description" content="Practica ortografia con textos reales del cuadernillo de ingreso al Poder Judicial de San Juan. Encontra los errores antes de que se acabe el tiempo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,500&family=Piazzolla:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="fondo-rayado" aria-hidden="true"></div>
+
+  <main class="envoltura">
+    <!-- ============== PANTALLA: CONFIGURACION ============== -->
+    <section id="pantalla-config">
+      <header class="membrete">
+        <span class="membrete__marca">Poder Judicial · San Juan</span>
+        <span class="membrete__folio" id="folio-config">Cuadernillo 2026</span>
+      </header>
+
+      <h1 class="titulo">Corrector de <em>Expedientes</em></h1>
+      <p class="subtitulo">
+        Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos
+        insertados. Encontralos haciendo clic antes de que se cumpla el tiempo.
+      </p>
+
+      <form class="tarjeta" id="form-config">
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="input-errores">Cantidad de errores</label>
+            <span class="campo__valor"><span id="valor-errores">15</span></span>
+          </div>
+          <input type="range" id="input-errores" min="5" max="25" step="1" value="15" />
+          <div class="campo__escala"><span>5</span><span>25</span></div>
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="input-tiempo">Tiempo disponible</label>
+            <span class="campo__valor"><span id="valor-tiempo">5</span> min</span>
+          </div>
+          <input type="range" id="input-tiempo" min="2" max="8" step="1" value="5" />
+          <div class="campo__escala"><span>2 min</span><span>8 min</span></div>
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="input-longitud">Extension del texto</label>
+            <span class="campo__valor"><span id="valor-longitud">400</span> palabras</span>
+          </div>
+          <input type="range" id="input-longitud" min="150" max="450" step="25" value="400" />
+          <div class="campo__escala"><span>150</span><span>450</span></div>
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="input-tema">Tema del cuadernillo</label>
+          </div>
+          <select class="select-tema" id="input-tema">
+            <option value="">Cualquier tema (sorteo)</option>
+          </select>
+        </div>
+
+        <div class="acciones">
+          <button type="submit" class="boton-sello">Iniciar practica</button>
+          <p class="nota-al-pie">
+            El texto se sortea del cuadernillo real. La cantidad de errores se ajusta
+            automaticamente si el texto elegido no tiene suficientes palabras aptas.
+          </p>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============== PANTALLA: JUEGO ============== -->
+    <section id="pantalla-juego" class="oculto">
+      <p class="tema-actual" id="tema-actual">Tema</p>
+      <div class="barra-juego">
+        <span class="pastilla pastilla--tiempo" id="pastilla-tiempo">
+          <span class="pastilla__etiqueta">Tiempo</span>
+          <span class="pastilla__valor" id="valor-cronometro">05:00</span>
+        </span>
+        <span class="pastilla pastilla--contador">
+          <span class="pastilla__etiqueta">Hallados</span>
+          <span class="pastilla__valor"><span id="valor-hallados">0</span>/<span id="valor-total">15</span></span>
+        </span>
+        <button type="button" class="boton-finalizar" id="boton-finalizar">Finalizar</button>
+      </div>
+
+      <div class="hoja">
+        <p class="texto-juridico" id="texto-juego" aria-live="off"></p>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA: RESULTADOS ============== -->
+    <section id="pantalla-resultados" class="oculto">
+      <div class="veredicto">
+        <span class="sello-veredicto" id="sello-veredicto">APROBADO</span>
+      </div>
+
+      <div class="grilla-stats">
+        <div class="stat">
+          <span class="stat__valor" id="stat-encontrados">0/0</span>
+          <span class="stat__etiqueta">Encontrados</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="stat-tiempo">00:00</span>
+          <span class="stat__etiqueta">Tiempo usado</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="stat-falsos">0</span>
+          <span class="stat__etiqueta">Marcas erradas</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="stat-precision">0%</span>
+          <span class="stat__etiqueta">Precision</span>
+        </div>
+      </div>
+
+      <div class="seccion-revision">
+        <h2>Revision del expediente</h2>
+        <p class="ayuda">Subrayado verde: lo encontraste. Marcado en rojo: se te escapo (correccion al lado).</p>
+        <div class="hoja">
+          <p class="texto-juridico" id="texto-revision"></p>
+        </div>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-sello" id="boton-repetir">Repetir con mismos ajustes</button>
+        <button type="button" class="boton-secundario" id="boton-config">Cambiar configuracion</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="data/textos.js"></script>
+  <script src="js/errores.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
