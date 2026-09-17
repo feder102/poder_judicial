@@ -130,6 +130,38 @@ function esCandidata(palabra) {
   return true;
 }
 
+// Detecta los indices de token que arrancan oracion (el primero del texto,
+// y el que sigue a un ".", "!" o "?" de cierre), para poder generar errores
+// de "minuscula despues de punto" ademas de las confusiones ortograficas.
+function indicesInicioOracion(tokens) {
+  const set = new Set();
+  let esperandoMayuscula = true;
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    if (tok.tipo === "palabra") {
+      if (esperandoMayuscula) set.add(i);
+      esperandoMayuscula = false;
+    } else if (/[.!?][»"'”)\]]*\s*$/.test(tok.texto)) {
+      esperandoMayuscula = true;
+    }
+  }
+  return set;
+}
+
+// Palabra con mayuscula inicial "normal" (Constitucion, El, Juez): sirve de
+// candidata para el error de minuscula, distinto de una sigla (CAVIG) o de
+// una abreviatura con mayusculas intercaladas (CCyCN).
+function esMayusculaInicialNormal(palabra) {
+  if (palabra.length < 2) return false;
+  if (/[A-ZÁÉÍÓÚÑ]/.test(palabra.slice(1))) return false;
+  const primera = palabra.charAt(0);
+  return primera !== primera.toLowerCase();
+}
+
+function reglaMinusculaInicial(palabra) {
+  return palabra.charAt(0).toLowerCase() + palabra.slice(1);
+}
+
 function reglasAplicables(palabra) {
   const min = palabra.toLowerCase();
   const resultado = [];
@@ -151,13 +183,16 @@ function reglasAplicables(palabra) {
  */
 function generarEjercicio(texto, cantidadErrores) {
   const tokens = tokenizar(texto);
+  const inicios = indicesInicioOracion(tokens);
   const candidatos = [];
   tokens.forEach((tok, idx) => {
-    if (tok.tipo === "palabra" && esCandidata(tok.texto)) {
-      const reglas = reglasAplicables(tok.texto);
-      if (reglas.length > 0) {
-        candidatos.push({ idx, reglas });
-      }
+    if (tok.tipo !== "palabra") return;
+    let reglas = esCandidata(tok.texto) ? reglasAplicables(tok.texto) : [];
+    if (inicios.has(idx) && esMayusculaInicialNormal(tok.texto)) {
+      reglas = reglas.concat([{ categoria: "mayúscula inicial", valor: reglaMinusculaInicial(tok.texto) }]);
+    }
+    if (reglas.length > 0) {
+      candidatos.push({ idx, reglas });
     }
   });
 
