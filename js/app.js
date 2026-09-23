@@ -7,6 +7,7 @@
     config: document.getElementById("pantalla-config"),
     juego: document.getElementById("pantalla-juego"),
     resultados: document.getElementById("pantalla-resultados"),
+    repaso: document.getElementById("pantalla-repaso"),
   };
 
   function mostrarPantalla(nombre) {
@@ -207,8 +208,114 @@
       sello.classList.add("sello-veredicto--reprobado");
     }
 
+    Progreso.registrarIntento({
+      ts: Date.now(),
+      tema: estado.tema,
+      encontrados,
+      total,
+      tiempoUsado,
+      falsos: estado.falsos,
+    });
+    const perdidos = estado.errores.filter((e) => !estado.encontrados.has(e.tokenIdx));
+    Progreso.registrarPalabrasFalladas(perdidos, estado.tema);
+    actualizarContadorRepaso();
+
+    renderizarProgreso();
     renderizarRevision();
     mostrarPantalla("resultados");
+  }
+
+  // ---------- Progreso (historial + palabras para repasar) ----------
+
+  function renderizarProgreso() {
+    const historial = Progreso.obtenerHistorial();
+    const resumen = document.getElementById("progreso-resumen");
+    const contenedor = document.getElementById("grafico-progreso");
+
+    if (historial.length <= 1) {
+      resumen.textContent = "Este es tu primer intento registrado en este navegador.";
+      contenedor.innerHTML = "";
+      return;
+    }
+
+    const ultimos = historial.slice(-15);
+    resumen.textContent = `${historial.length} intentos registrados en este navegador (se pierden si reiniciás la PC o borrás datos de navegación). Mostrando los últimos ${ultimos.length}.`;
+
+    const anchoBarra = 16;
+    const espacio = 6;
+    const alto = 90;
+    const ancho = ultimos.length * (anchoBarra + espacio) + espacio;
+
+    let barras = "";
+    ultimos.forEach((intento, i) => {
+      const ratio = intento.total > 0 ? intento.encontrados / intento.total : 0;
+      const alturaBarra = Math.max(4, ratio * alto);
+      const x = espacio + i * (anchoBarra + espacio);
+      const y = alto - alturaBarra;
+      let clase = "reforzar";
+      if (ratio >= 0.9) clase = "aprobado";
+      else if (ratio >= 0.6) clase = "revisar";
+      const esUltimo = i === ultimos.length - 1;
+      const pct = Math.round(ratio * 100);
+      const fecha = new Date(intento.ts).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+      barras += `<rect x="${x}" y="${y.toFixed(1)}" width="${anchoBarra}" height="${alturaBarra.toFixed(1)}" rx="2" class="barra-progreso ${clase}${esUltimo ? " actual" : ""}"><title>${pct}% (${intento.encontrados}/${intento.total}) · ${fecha}</title></rect>`;
+    });
+
+    contenedor.innerHTML = `<svg viewBox="0 0 ${ancho} ${alto}" width="100%" height="90" preserveAspectRatio="none" role="img" aria-label="Precision de tus ultimos intentos">${barras}</svg>`;
+  }
+
+  function formatoRelativo(ts) {
+    const minutos = Math.floor((Date.now() - ts) / 60000);
+    if (minutos < 1) return "recién";
+    if (minutos < 60) return `hace ${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `hace ${horas} h`;
+    const dias = Math.floor(horas / 24);
+    return `hace ${dias} d`;
+  }
+
+  function actualizarContadorRepaso() {
+    const n = Progreso.obtenerRepaso().length;
+    const badge = document.getElementById("contador-repaso");
+    badge.textContent = n;
+    badge.classList.toggle("oculto", n === 0);
+  }
+
+  function renderizarRepaso() {
+    const lista = document.getElementById("lista-repaso");
+    const palabras = Progreso.obtenerRepaso();
+    lista.innerHTML = "";
+    document.getElementById("repaso-vacio").classList.toggle("oculto", palabras.length > 0);
+
+    for (const p of palabras) {
+      const li = document.createElement("li");
+      li.className = "repaso-item";
+
+      const texto = document.createElement("div");
+      texto.className = "repaso-item__texto";
+      const correcta = document.createElement("span");
+      correcta.className = "repaso-item__correcta";
+      correcta.textContent = p.correcta;
+      const meta = document.createElement("span");
+      meta.className = "repaso-item__meta";
+      meta.textContent = `fallada ${p.veces} ${p.veces === 1 ? "vez" : "veces"} · ${p.categorias.join(", ")} · ${formatoRelativo(p.ultimaFecha)}`;
+      texto.appendChild(correcta);
+      texto.appendChild(meta);
+
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "repaso-item__ok";
+      boton.textContent = "Ya la sé";
+      boton.addEventListener("click", () => {
+        Progreso.eliminarPalabraRepaso(p.clave);
+        renderizarRepaso();
+        actualizarContadorRepaso();
+      });
+
+      li.appendChild(texto);
+      li.appendChild(boton);
+      lista.appendChild(li);
+    }
   }
 
   function formatoTiempo(s) {
@@ -268,9 +375,30 @@
     mostrarPantalla("config");
   });
 
+  function abrirRepaso() {
+    renderizarRepaso();
+    mostrarPantalla("repaso");
+  }
+
+  document.getElementById("boton-ver-repaso").addEventListener("click", abrirRepaso);
+  document.getElementById("boton-repaso-desde-resultados").addEventListener("click", abrirRepaso);
+
+  document.getElementById("boton-repaso-volver").addEventListener("click", () => {
+    mostrarPantalla("config");
+  });
+
+  document.getElementById("boton-vaciar-repaso").addEventListener("click", () => {
+    if (confirm("¿Vaciar toda la lista de palabras para repasar?")) {
+      Progreso.vaciarRepaso();
+      renderizarRepaso();
+      actualizarContadorRepaso();
+    }
+  });
+
   // ---------- Arranque ----------
 
   poblarTemas();
   cargarConfigGuardada();
   actualizarLecturas();
+  actualizarContadorRepaso();
 })();

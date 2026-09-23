@@ -27,6 +27,11 @@
         insertados. Encontralos haciendo clic antes de que se cumpla el tiempo.
       </p>
 
+      <button type="button" class="enlace-repaso" id="boton-ver-repaso">
+        Palabras para repasar
+        <span class="contador-repaso oculto" id="contador-repaso">0</span>
+      </button>
+
       <form class="tarjeta" id="form-config">
         <div class="campo">
           <div class="campo__cabecera">
@@ -119,6 +124,14 @@
         </div>
       </div>
 
+      <div class="seccion-progreso">
+        <h2>Tu progreso</h2>
+        <p class="ayuda" id="progreso-resumen">Este es tu primer intento registrado en este navegador.</p>
+        <div class="hoja hoja--grafico">
+          <div id="grafico-progreso" class="grafico-progreso" aria-label="Precision de tus ultimos intentos"></div>
+        </div>
+      </div>
+
       <div class="seccion-revision">
         <h2>Revision del expediente</h2>
         <p class="ayuda">Subrayado verde: lo encontraste. Marcado en rojo: se te escapo (correccion al lado).</p>
@@ -130,12 +143,37 @@
       <div class="acciones-finales">
         <button type="button" class="boton-sello" id="boton-repetir">Repetir con mismos ajustes</button>
         <button type="button" class="boton-secundario" id="boton-config">Cambiar configuracion</button>
+        <button type="button" class="boton-secundario" id="boton-repaso-desde-resultados">Ver palabras para repasar</button>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA: PALABRAS PARA REPASAR ============== -->
+    <section id="pantalla-repaso" class="oculto">
+      <header class="membrete">
+        <span class="membrete__marca">Poder Judicial · San Juan</span>
+        <button type="button" class="boton-secundario" id="boton-repaso-volver">Volver</button>
+      </header>
+
+      <h1 class="titulo">Palabras para <em>repasar</em></h1>
+      <p class="subtitulo">
+        Las palabras que no llegaste a corregir a tiempo se van guardando aca,
+        para que las tengas cerca y no se te vuelvan a escapar.
+      </p>
+
+      <div class="tarjeta">
+        <p class="ayuda oculto" id="repaso-vacio">Todavia no se te escapo ninguna palabra. Así se hace.</p>
+        <ul class="lista-repaso" id="lista-repaso"></ul>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-secundario" id="boton-vaciar-repaso">Vaciar lista</button>
       </div>
     </section>
   </main>
 
   <script src="data/textos.js"></script>
   <script src="js/errores.js"></script>
+  <script src="js/progreso.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
