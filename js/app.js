@@ -286,6 +286,7 @@
     const palabras = Progreso.obtenerRepaso();
     lista.innerHTML = "";
     document.getElementById("repaso-vacio").classList.toggle("oculto", palabras.length > 0);
+    document.getElementById("repaso-credito").classList.toggle("oculto", palabras.length === 0);
 
     for (const p of palabras) {
       const li = document.createElement("li");
@@ -299,8 +300,14 @@
       const meta = document.createElement("span");
       meta.className = "repaso-item__meta";
       meta.textContent = `fallada ${p.veces} ${p.veces === 1 ? "vez" : "veces"} · ${p.categorias.join(", ")} · ${formatoRelativo(p.ultimaFecha)}`;
+      const definicion = document.createElement("p");
+      definicion.className = "repaso-item__definicion repaso-item__definicion--cargando";
+      definicion.textContent = "Buscando definición…";
       texto.appendChild(correcta);
       texto.appendChild(meta);
+      texto.appendChild(definicion);
+
+      cargarDefinicion(p.correcta, definicion);
 
       const boton = document.createElement("button");
       boton.type = "button";
@@ -316,6 +323,25 @@
       li.appendChild(boton);
       lista.appendChild(li);
     }
+  }
+
+  function cargarDefinicion(palabra, elemento) {
+    Diccionario.obtenerDefinicion(palabra).then(({ definicion, url }) => {
+      elemento.classList.remove("repaso-item__definicion--cargando");
+      if (definicion) {
+        elemento.textContent = definicion;
+      } else {
+        elemento.innerHTML = "";
+        elemento.classList.add("repaso-item__definicion--vacia");
+        elemento.appendChild(document.createTextNode("Sin definición disponible en el Wikcionario. "));
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Buscarla igual →";
+        elemento.appendChild(link);
+      }
+    });
   }
 
   function formatoTiempo(s) {
