@@ -91,8 +91,7 @@
       tema: fuente.tema,
       tokens,
       errores,
-      encontrados: new Set(),
-      falsos: 0,
+      marcadas: new Set(),
       segundosTotales: cfg.tiempo * 60,
       segundosRestantes: cfg.tiempo * 60,
       timerId: null,
@@ -152,24 +151,20 @@
     });
   }
 
+  // Durante el examen no se avisa si un click esta bien o mal: solo se
+  // marca de forma neutra lo que la persona fue senalando, igual que
+  // subrayar a lapiz sobre el papel antes de corregir. La correccion real
+  // (que palabras eran errores de verdad) se calcula recien al finalizar.
   function manejarClicPalabra(idx, span) {
     if (estado.terminado) return;
-    const esError = estado.errores.find((e) => e.tokenIdx === idx);
-    if (esError) {
-      if (estado.encontrados.has(idx)) return;
-      estado.encontrados.add(idx);
-      span.classList.add("acertada");
-      document.getElementById("valor-hallados").textContent = estado.encontrados.size;
-      if (estado.encontrados.size === estado.errores.length) {
-        setTimeout(finalizarPractica, 500);
-      }
+    if (estado.marcadas.has(idx)) {
+      estado.marcadas.delete(idx);
+      span.classList.remove("marcada");
     } else {
-      estado.falsos++;
-      span.classList.remove("fallo");
-      // reflow para permitir relanzar la animacion si se hace clic dos veces
-      void span.offsetWidth;
-      span.classList.add("fallo");
+      estado.marcadas.add(idx);
+      span.classList.add("marcada");
     }
+    document.getElementById("valor-hallados").textContent = estado.marcadas.size;
   }
 
   document.getElementById("boton-finalizar").addEventListener("click", finalizarPractica);
@@ -184,14 +179,19 @@
   // ---------- Resultados ----------
 
   function mostrarResultados() {
+    const idxErrores = new Set(estado.errores.map((e) => e.tokenIdx));
+    const encontradosIdx = new Set([...estado.marcadas].filter((idx) => idxErrores.has(idx)));
+    const falsosIdx = new Set([...estado.marcadas].filter((idx) => !idxErrores.has(idx)));
+
     const total = estado.errores.length;
-    const encontrados = estado.encontrados.size;
+    const encontrados = encontradosIdx.size;
+    const falsos = falsosIdx.size;
     const tiempoUsado = estado.segundosTotales - Math.max(0, estado.segundosRestantes);
-    const precision = encontrados + estado.falsos > 0 ? Math.round((encontrados / (encontrados + estado.falsos)) * 100) : 0;
+    const precision = encontrados + falsos > 0 ? Math.round((encontrados / (encontrados + falsos)) * 100) : 0;
 
     document.getElementById("stat-encontrados").textContent = `${encontrados}/${total}`;
     document.getElementById("stat-tiempo").textContent = formatoTiempo(tiempoUsado);
-    document.getElementById("stat-falsos").textContent = estado.falsos;
+    document.getElementById("stat-falsos").textContent = falsos;
     document.getElementById("stat-precision").textContent = `${precision}%`;
 
     const ratio = total > 0 ? encontrados / total : 0;
@@ -214,14 +214,14 @@
       encontrados,
       total,
       tiempoUsado,
-      falsos: estado.falsos,
+      falsos,
     });
-    const perdidos = estado.errores.filter((e) => !estado.encontrados.has(e.tokenIdx));
+    const perdidos = estado.errores.filter((e) => !encontradosIdx.has(e.tokenIdx));
     Progreso.registrarPalabrasFalladas(perdidos, estado.tema);
     actualizarContadorRepaso();
 
     renderizarProgreso();
-    renderizarRevision();
+    renderizarRevision(encontradosIdx, falsosIdx);
     mostrarPantalla("resultados");
   }
 
@@ -350,7 +350,7 @@
     return `${mm}:${ss}`;
   }
 
-  function renderizarRevision() {
+  function renderizarRevision(encontradosIdx, falsosIdx) {
     const contenedor = document.getElementById("texto-revision");
     contenedor.innerHTML = "";
     const erroresPorIdx = new Map(estado.errores.map((e) => [e.tokenIdx, e]));
@@ -365,7 +365,7 @@
       span.className = "palabra";
       span.textContent = tok.texto;
       if (info) {
-        if (estado.encontrados.has(idx)) {
+        if (encontradosIdx.has(idx)) {
           span.classList.add("acertada-final");
         } else {
           span.classList.add("perdida-final");
@@ -374,6 +374,8 @@
           nota.textContent = info.original;
           span.appendChild(nota);
         }
+      } else if (falsosIdx.has(idx)) {
+        span.classList.add("falso-final");
       }
       contenedor.appendChild(span);
     });
