@@ -440,7 +440,7 @@ button:focus-visible,
   font-size: clamp(1.02rem, 1.6vw, 1.18rem);
   line-height: 1.85;
   color: var(--ink);
-  text-align: left;
+  text-align: justify;
   word-wrap: break-word;
 }
 
@@ -935,4 +935,16 @@ button:focus-visible,
   white-space: nowrap;
   text-decoration: none;
   display: inline-block;
+}
+
+/* En el examen y en la revision el texto usa casi todo el ancho de la
+   pantalla, justificado como en la hoja impresa. */
+.envoltura:has(#pantalla-juego:not(.oculto)),
+.envoltura:has(#pantalla-resultados:not(.oculto)) {
+  max-width: min(1400px, 96vw);
+}
+
+.envoltura:has(#pantalla-juego:not(.oculto)) .texto-juridico,
+.envoltura:has(#pantalla-resultados:not(.oculto)) .texto-juridico {
+  font-size: clamp(1.05rem, 1.25vw, 1.3rem);
 }
