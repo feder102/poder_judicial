@@ -4,6 +4,13 @@ Sitio de práctica de ortografía para el examen de ingreso al Poder Judicial
 de San Juan. Muestra un texto real del cuadernillo de estudio con errores
 ortográficos insertados que hay que encontrar antes de que se acabe el tiempo.
 
+Tiene dos niveles, elegibles en la pantalla de configuración:
+
+- **Detectar**: alcanza con marcar las palabras que tienen error.
+- **Corregir** (más difícil): además de marcar el error hay que escribir la
+  palabra correcta. Solo cuenta como acierto si coincide exactamente
+  (tildes y mayúsculas incluidas). El historial de progreso se separa por nivel.
+
 Es un sitio estático (HTML + CSS + JS, sin build ni backend), pensado para
 servirse directamente con cualquier servidor web.
 

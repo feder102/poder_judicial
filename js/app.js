@@ -27,6 +27,21 @@
   const valorTiempo = document.getElementById("valor-tiempo");
   const valorLongitud = document.getElementById("valor-longitud");
   const formConfig = document.getElementById("form-config");
+  const inputsModo = document.querySelectorAll('input[name="modo"]');
+
+  function modoSeleccionado() {
+    const el = document.querySelector('input[name="modo"]:checked');
+    return el ? el.value : "detectar";
+  }
+
+  function actualizarSubtitulo() {
+    document.getElementById("subtitulo-config").textContent =
+      modoSeleccionado() === "corregir"
+        ? "Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos insertados. Encontralos y escribi la palabra correcta antes de que se cumpla el tiempo."
+        : "Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos insertados. Encontralos haciendo clic antes de que se cumpla el tiempo.";
+  }
+
+  inputsModo.forEach((el) => el.addEventListener("change", actualizarSubtitulo));
 
   function cargarConfigGuardada() {
     try {
@@ -37,6 +52,11 @@
       if (cfg.tiempo) inputTiempo.value = cfg.tiempo;
       if (cfg.longitud) inputLongitud.value = cfg.longitud;
       if (cfg.tema !== undefined) inputTema.value = cfg.tema;
+      if (cfg.modo) {
+        inputsModo.forEach((el) => {
+          el.checked = el.value === cfg.modo;
+        });
+      }
     } catch (e) {
       /* localStorage no disponible: se ignora y se usan los valores por defecto */
     }
@@ -92,6 +112,7 @@
       tokens,
       errores,
       marcadas: new Set(),
+      correcciones: new Map(), // modo "corregir": idx -> palabra escrita por la persona
       segundosTotales: cfg.tiempo * 60,
       segundosRestantes: cfg.tiempo * 60,
       timerId: null,
@@ -102,6 +123,9 @@
     document.getElementById("tema-actual").textContent = fuente.tema;
     document.getElementById("valor-total").textContent = errores.length;
     document.getElementById("valor-hallados").textContent = "0";
+    const corregir = cfg.modo === "corregir";
+    document.getElementById("etiqueta-contador").textContent = corregir ? "Corregidas" : "Marcadas";
+    document.getElementById("ayuda-corregir").classList.toggle("oculto", !corregir);
 
     renderizarJuego();
     actualizarCronometro();
@@ -140,11 +164,12 @@
       span.textContent = tok.texto;
       span.dataset.idx = idx;
       span.tabIndex = 0;
-      span.addEventListener("click", () => manejarClicPalabra(idx, span));
+      const accion = estado.cfg.modo === "corregir" ? editarPalabra : manejarClicPalabra;
+      span.addEventListener("click", () => accion(idx, span));
       span.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          manejarClicPalabra(idx, span);
+          accion(idx, span);
         }
       });
       contenedor.appendChild(span);
@@ -167,6 +192,71 @@
     document.getElementById("valor-hallados").textContent = estado.marcadas.size;
   }
 
+  // Modo "corregir": al hacer clic la palabra se vuelve un campo de texto.
+  // Si la persona escribe algo distinto de lo que se ve, queda registrada la
+  // correccion; si lo deja igual o vacio, se deshace. Como en el modo
+  // detectar, no se revela si la correccion es acertada hasta finalizar.
+  function editarPalabra(idx, span) {
+    if (estado.terminado || span.classList.contains("editando")) return;
+    const mostrada = estado.tokens[idx].texto;
+    const actual = estado.correcciones.get(idx) || mostrada;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "input-correccion";
+    input.value = actual;
+    input.autocapitalize = "off";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.setAttribute("aria-label", `Corregir la palabra ${mostrada}`);
+    const ajustar = () => {
+      input.style.width = `${Math.max(3, input.value.length + 1)}ch`;
+    };
+    ajustar();
+    input.addEventListener("input", ajustar);
+
+    let cerrado = false;
+    const cerrar = (guardar) => {
+      if (cerrado) return;
+      cerrado = true;
+      const escrito = input.value.trim();
+      if (guardar) {
+        if (escrito && escrito !== mostrada) {
+          estado.correcciones.set(idx, escrito);
+          estado.marcadas.add(idx);
+        } else {
+          estado.correcciones.delete(idx);
+          estado.marcadas.delete(idx);
+        }
+      }
+      const final = estado.correcciones.get(idx);
+      span.classList.remove("editando");
+      span.classList.toggle("marcada", final !== undefined);
+      span.textContent = final !== undefined ? final : mostrada;
+      document.getElementById("valor-hallados").textContent = estado.marcadas.size;
+      if (guardar) span.focus();
+    };
+
+    input.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+      if (e.key === "Enter") {
+        e.preventDefault();
+        cerrar(true);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cerrar(false);
+      }
+    });
+    input.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("blur", () => cerrar(true));
+
+    span.classList.add("editando");
+    span.textContent = "";
+    span.appendChild(input);
+    input.focus();
+    input.select();
+  }
+
   document.getElementById("boton-finalizar").addEventListener("click", finalizarPractica);
 
   function finalizarPractica() {
@@ -179,15 +269,27 @@
   // ---------- Resultados ----------
 
   function mostrarResultados() {
+    const corregir = estado.cfg.modo === "corregir";
     const idxErrores = new Set(estado.errores.map((e) => e.tokenIdx));
-    const encontradosIdx = new Set([...estado.marcadas].filter((idx) => idxErrores.has(idx)));
+    const marcadasErrores = [...estado.marcadas].filter((idx) => idxErrores.has(idx));
+    // En "corregir" solo cuenta como acierto si la palabra escrita es la original.
+    const originales = new Map(estado.errores.map((e) => [e.tokenIdx, e.original]));
+    const encontradosIdx = new Set(
+      corregir ? marcadasErrores.filter((idx) => estado.correcciones.get(idx) === originales.get(idx)) : marcadasErrores
+    );
+    const malCorregidosIdx = new Set(marcadasErrores.filter((idx) => !encontradosIdx.has(idx)));
     const falsosIdx = new Set([...estado.marcadas].filter((idx) => !idxErrores.has(idx)));
 
     const total = estado.errores.length;
     const encontrados = encontradosIdx.size;
-    const falsos = falsosIdx.size;
+    const falsos = falsosIdx.size + malCorregidosIdx.size;
     const tiempoUsado = estado.segundosTotales - Math.max(0, estado.segundosRestantes);
-    const precision = encontrados + falsos > 0 ? Math.round((encontrados / (encontrados + falsos)) * 100) : 0;
+    const precision = estado.marcadas.size > 0 ? Math.round((encontrados / estado.marcadas.size) * 100) : 0;
+
+    document.getElementById("stat-etiqueta-encontrados").textContent = corregir ? "Corregidos" : "Encontrados";
+    document.getElementById("ayuda-revision").textContent = corregir
+      ? "Verde: lo corregiste bien. Rojo: se te escapó (corrección al lado). Ámbar tachado: lo corregiste mal (la versión correcta al lado). Ámbar: cambiaste una palabra que estaba bien."
+      : "Verde: lo marcaste y era un error. Rojo: se te escapó (corrección al lado). Ámbar: lo marcaste pero estaba bien escrito.";
 
     document.getElementById("stat-encontrados").textContent = `${encontrados}/${total}`;
     document.getElementById("stat-tiempo").textContent = formatoTiempo(tiempoUsado);
@@ -215,31 +317,34 @@
       total,
       tiempoUsado,
       falsos,
+      modo: estado.cfg.modo || "detectar",
     });
     const perdidos = estado.errores.filter((e) => !encontradosIdx.has(e.tokenIdx));
     Progreso.registrarPalabrasFalladas(perdidos, estado.tema);
     actualizarContadorRepaso();
 
     renderizarProgreso();
-    renderizarRevision(encontradosIdx, falsosIdx);
+    renderizarRevision(encontradosIdx, falsosIdx, malCorregidosIdx);
     mostrarPantalla("resultados");
   }
 
   // ---------- Progreso (historial + palabras para repasar) ----------
 
   function renderizarProgreso() {
-    const historial = Progreso.obtenerHistorial();
+    const modoActual = estado.cfg.modo || "detectar";
+    const historial = Progreso.obtenerHistorial().filter((i) => (i.modo || "detectar") === modoActual);
+    const nombreModo = modoActual === "corregir" ? "en modo Corregir" : "en modo Detectar";
     const resumen = document.getElementById("progreso-resumen");
     const contenedor = document.getElementById("grafico-progreso");
 
     if (historial.length <= 1) {
-      resumen.textContent = "Este es tu primer intento registrado en este navegador.";
+      resumen.textContent = `Este es tu primer intento ${nombreModo} registrado en este navegador.`;
       contenedor.innerHTML = "";
       return;
     }
 
     const ultimos = historial.slice(-15);
-    resumen.textContent = `${historial.length} intentos registrados en este navegador (se pierden si reiniciás la PC o borrás datos de navegación). Mostrando los últimos ${ultimos.length}.`;
+    resumen.textContent = `${historial.length} intentos ${nombreModo} registrados en este navegador (se pierden si reiniciás la PC o borrás datos de navegación). Mostrando los últimos ${ultimos.length}.`;
 
     const anchoBarra = 16;
     const espacio = 6;
@@ -350,7 +455,7 @@
     return `${mm}:${ss}`;
   }
 
-  function renderizarRevision(encontradosIdx, falsosIdx) {
+  function renderizarRevision(encontradosIdx, falsosIdx, malCorregidosIdx) {
     const contenedor = document.getElementById("texto-revision");
     contenedor.innerHTML = "";
     const erroresPorIdx = new Map(estado.errores.map((e) => [e.tokenIdx, e]));
@@ -367,6 +472,14 @@
       if (info) {
         if (encontradosIdx.has(idx)) {
           span.classList.add("acertada-final");
+          span.textContent = estado.correcciones.get(idx) || tok.texto;
+        } else if (malCorregidosIdx.has(idx)) {
+          span.classList.add("parcial-final");
+          span.textContent = estado.correcciones.get(idx);
+          const nota = document.createElement("span");
+          nota.className = "correccion-tooltip";
+          nota.textContent = info.original;
+          span.appendChild(nota);
         } else {
           span.classList.add("perdida-final");
           const nota = document.createElement("span");
@@ -376,6 +489,13 @@
         }
       } else if (falsosIdx.has(idx)) {
         span.classList.add("falso-final");
+        if (estado.correcciones.has(idx)) {
+          span.textContent = estado.correcciones.get(idx);
+          const nota = document.createElement("span");
+          nota.className = "correccion-tooltip";
+          nota.textContent = tok.texto;
+          span.appendChild(nota);
+        }
       }
       contenedor.appendChild(span);
     });
@@ -390,6 +510,7 @@
       tiempo: parseInt(inputTiempo.value, 10),
       longitud: parseInt(inputLongitud.value, 10),
       tema: inputTema.value,
+      modo: modoSeleccionado(),
     };
     guardarConfig(cfg);
     iniciarPractica(cfg);
@@ -427,6 +548,7 @@
 
   poblarTemas();
   cargarConfigGuardada();
+  actualizarSubtitulo();
   actualizarLecturas();
   actualizarContadorRepaso();
 })();

@@ -22,7 +22,7 @@
       </header>
 
       <h1 class="titulo">Corrector de <em>Expedientes</em></h1>
-      <p class="subtitulo">
+      <p class="subtitulo" id="subtitulo-config">
         Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos
         insertados. Encontralos haciendo clic antes de que se cumpla el tiempo.
       </p>
@@ -33,6 +33,26 @@
       </button>
 
       <form class="tarjeta" id="form-config">
+        <fieldset class="campo campo--modo">
+          <legend class="campo__etiqueta">Nivel de dificultad</legend>
+          <div class="selector-modo">
+            <label class="opcion-modo">
+              <input type="radio" name="modo" value="detectar" checked />
+              <span class="opcion-modo__caja">
+                <span class="opcion-modo__titulo">Detectar</span>
+                <span class="opcion-modo__desc">Solo tenés que encontrar las palabras con error.</span>
+              </span>
+            </label>
+            <label class="opcion-modo">
+              <input type="radio" name="modo" value="corregir" />
+              <span class="opcion-modo__caja">
+                <span class="opcion-modo__titulo">Corregir</span>
+                <span class="opcion-modo__desc">Encontrás el error y además escribís la palabra correcta.</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <div class="campo">
           <div class="campo__cabecera">
             <label class="campo__etiqueta" for="input-errores">Cantidad de errores</label>
@@ -88,12 +108,16 @@
           <span class="pastilla__valor" id="valor-cronometro">05:00</span>
         </span>
         <span class="pastilla pastilla--contador">
-          <span class="pastilla__etiqueta">Marcadas</span>
+          <span class="pastilla__etiqueta" id="etiqueta-contador">Marcadas</span>
           <span class="pastilla__valor"><span id="valor-hallados">0</span>/<span id="valor-total">15</span></span>
         </span>
         <button type="button" class="boton-finalizar" id="boton-finalizar">Finalizar</button>
       </div>
 
+      <p class="ayuda ayuda-juego oculto" id="ayuda-corregir">
+        Hacé clic en una palabra con error, escribí la versión correcta y apretá Enter.
+        Para deshacer, borrá el texto o dejala como estaba.
+      </p>
       <div class="hoja">
         <p class="texto-juridico" id="texto-juego" aria-live="off"></p>
       </div>
@@ -108,7 +132,7 @@
       <div class="grilla-stats">
         <div class="stat">
           <span class="stat__valor" id="stat-encontrados">0/0</span>
-          <span class="stat__etiqueta">Encontrados</span>
+          <span class="stat__etiqueta" id="stat-etiqueta-encontrados">Encontrados</span>
         </div>
         <div class="stat">
           <span class="stat__valor" id="stat-tiempo">00:00</span>
@@ -134,7 +158,7 @@
 
       <div class="seccion-revision">
         <h2>Revision del expediente</h2>
-        <p class="ayuda">Verde: lo marcaste y era un error. Rojo: se te escapó (corrección al lado). Ámbar: lo marcaste pero estaba bien escrito.</p>
+        <p class="ayuda" id="ayuda-revision">Verde: lo marcaste y era un error. Rojo: se te escapó (corrección al lado). Ámbar: lo marcaste pero estaba bien escrito.</p>
         <div class="hoja">
           <p class="texto-juridico" id="texto-revision"></p>
         </div>

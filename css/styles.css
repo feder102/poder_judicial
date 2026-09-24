@@ -816,3 +816,123 @@ button:focus-visible,
     justify-content: center;
   }
 }
+
+/* ---------- Selector de dificultad ---------- */
+
+.campo--modo {
+  border: 0;
+  padding: 0;
+  margin: 0 0 28px;
+  min-width: 0;
+}
+
+.campo--modo legend {
+  padding: 0;
+  margin-bottom: 10px;
+}
+
+.selector-modo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.opcion-modo {
+  display: block;
+  cursor: pointer;
+}
+
+.opcion-modo input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opcion-modo__caja {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.opcion-modo__titulo {
+  font-family: var(--display);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.opcion-modo__desc {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.opcion-modo:hover .opcion-modo__caja {
+  border-color: var(--sello);
+}
+
+.opcion-modo input:checked + .opcion-modo__caja {
+  border-color: var(--sello);
+  background: var(--sello-soft);
+  box-shadow: inset 0 0 0 1px var(--sello);
+}
+
+.opcion-modo input:focus-visible + .opcion-modo__caja {
+  outline: 2px solid var(--sello);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .selector-modo {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Modo corregir ---------- */
+
+.ayuda-juego {
+  margin: 0 0 12px;
+}
+
+.palabra.editando::after {
+  display: none;
+}
+
+.input-correccion {
+  font: inherit;
+  color: var(--sello);
+  background: var(--paper-card);
+  border: 0;
+  border-bottom: 2px solid var(--sello);
+  border-radius: 0;
+  padding: 0 2px;
+  margin: 0;
+  min-width: 3ch;
+  outline: none;
+}
+
+.palabra.parcial-final {
+  color: var(--ambar);
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: var(--ambar);
+}
+
+.palabra.parcial-final .correccion-tooltip,
+.palabra.falso-final .correccion-tooltip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--aprobado);
+  background: var(--aprobado-soft);
+  border-radius: 2px;
+  padding: 0 4px;
+  margin-left: 3px;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
+}
