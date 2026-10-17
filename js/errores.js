@@ -162,6 +162,32 @@ function reglaMinusculaInicial(palabra) {
   return palabra.charAt(0).toLowerCase() + palabra.slice(1);
 }
 
+// Memoria de las ultimas palabras que se usaron como error, para no repetir
+// siempre las mismas entre intentos (los textos son fijos y pocos).
+const CLAVE_RECIENTES = "expediente_errores_recientes_v1";
+const MAX_RECIENTES = 120;
+
+function leerRecientes() {
+  try {
+    const raw = localStorage.getItem(CLAVE_RECIENTES);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function guardarRecientes(set) {
+  try {
+    localStorage.setItem(CLAVE_RECIENTES, JSON.stringify([...set].slice(-MAX_RECIENTES)));
+  } catch (e) {
+    /* no critico */
+  }
+}
+
+function elegirAzar(lista) {
+  return lista[Math.floor(Math.random() * lista.length)];
+}
+
 function reglasAplicables(palabra) {
   const min = palabra.toLowerCase();
   const resultado = [];
@@ -198,52 +224,85 @@ function generarEjercicio(texto, cantidadErrores) {
 
   const n = Math.min(cantidadErrores, candidatos.length);
   const elegidos = [];
+  const recientes = leerRecientes();
+  const palabrasUsadas = new Set(); // misma palabra no dos veces en un ejercicio
+
+  const clave = (c) => tokens[c.idx].texto.toLowerCase();
+  // Prefiere palabras que no salieron hace poco; si no hay, cae a cualquiera.
+  const preferir = (cands) => {
+    const libres = cands.filter((c) => !palabrasUsadas.has(clave(c)));
+    const base = libres.length ? libres : cands;
+    const frescas = base.filter((c) => !recientes.has(clave(c)));
+    return frescas.length ? frescas : base;
+  };
 
   if (n > 0) {
-    const numBaldes = n;
-    const tamBalde = candidatos.length / numBaldes;
+    const tamBalde = candidatos.length / n;
     const usados = new Set();
-    for (let b = 0; b < numBaldes; b++) {
+    for (let b = 0; b < n; b++) {
       const inicio = Math.floor(b * tamBalde);
       const fin = Math.max(inicio + 1, Math.floor((b + 1) * tamBalde));
       const opciones = [];
       for (let i = inicio; i < fin && i < candidatos.length; i++) {
-        if (!usados.has(i)) opciones.push(i);
+        if (!usados.has(i)) opciones.push(candidatos[i]);
       }
       if (opciones.length === 0) continue;
-      const elegido = opciones[Math.floor(Math.random() * opciones.length)];
-      usados.add(elegido);
-      elegidos.push(candidatos[elegido]);
+      const cand = elegirAzar(preferir(opciones));
+      usados.add(candidatos.indexOf(cand));
+      palabrasUsadas.add(clave(cand));
+      elegidos.push(cand);
     }
     // completar si algun balde quedo vacio (texto corto / candidatos escasos)
-    let cursor = 0;
-    while (elegidos.length < n && cursor < candidatos.length) {
-      if (!usados.has(cursor)) {
-        usados.add(cursor);
-        elegidos.push(candidatos[cursor]);
+    if (elegidos.length < n) {
+      const restantes = candidatos.filter((c, i) => !usados.has(i));
+      while (elegidos.length < n && restantes.length) {
+        const cand = elegirAzar(preferir(restantes));
+        restantes.splice(restantes.indexOf(cand), 1);
+        palabrasUsadas.add(clave(cand));
+        elegidos.push(cand);
       }
-      cursor++;
     }
   }
 
   elegidos.sort((a, b) => a.idx - b.idx);
 
+  // Tipo de error: prefiere categorias todavia no usadas en este ejercicio,
+  // para que no sean casi todos tildes o b/v.
+  const categoriasUsadas = new Map();
   const errores = [];
   for (const cand of elegidos) {
-    const regla = cand.reglas[Math.floor(Math.random() * cand.reglas.length)];
+    const minimo = Math.min(...cand.reglas.map((r) => categoriasUsadas.get(r.categoria) || 0));
+    const reglasMenosUsadas = cand.reglas.filter((r) => (categoriasUsadas.get(r.categoria) || 0) === minimo);
+    const regla = elegirAzar(reglasMenosUsadas);
+    categoriasUsadas.set(regla.categoria, (categoriasUsadas.get(regla.categoria) || 0) + 1);
     const original = tokens[cand.idx].texto;
+    recientes.add(original.toLowerCase());
     tokens[cand.idx] = { tipo: "palabra", texto: regla.valor, esError: true };
     errores.push({ tokenIdx: cand.idx, original, escrito: regla.valor, categoria: regla.categoria });
   }
+  guardarRecientes(recientes);
 
   return { tokens, errores };
 }
 
-/** Recorta un texto a aproximadamente `objetivoPalabras`, cerrando en el punto mas cercano. */
+/**
+ * Recorta un texto a aproximadamente `objetivoPalabras`. Si el texto es mas largo,
+ * arranca en el inicio de una oracion al azar (no siempre al principio) y cierra
+ * en el punto mas cercano, asi las palabras candidatas varian entre intentos.
+ */
 function recortarTexto(texto, objetivoPalabras) {
   const palabras = texto.split(/\s+/);
   if (palabras.length <= objetivoPalabras) return texto;
-  const parcial = palabras.slice(0, objetivoPalabras).join(" ");
+
+  // indices de palabra que arrancan oracion y dejan espacio para el largo pedido
+  const maxInicio = palabras.length - objetivoPalabras;
+  const inicios = [0];
+  for (let i = 1; i <= maxInicio; i++) {
+    if (/[.!?][»"'”)\]]*$/.test(palabras[i - 1])) inicios.push(i);
+  }
+  const desde = elegirAzar(inicios);
+
+  const parcial = palabras.slice(desde, desde + objetivoPalabras).join(" ");
   const ultimoPunto = Math.max(parcial.lastIndexOf(". "), parcial.lastIndexOf(".\n"));
   if (ultimoPunto > parcial.length * 0.5) {
     return parcial.slice(0, ultimoPunto + 1);
