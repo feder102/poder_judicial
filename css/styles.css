@@ -948,3 +948,145 @@ button:focus-visible,
 .envoltura:has(#pantalla-resultados:not(.oculto)) .texto-juridico {
   font-size: clamp(1.05rem, 1.25vw, 1.3rem);
 }
+
+/* ---------- Foco de practica (porcentaje por area) ---------- */
+
+.campo--foco,
+.campo--foco:last-of-type {
+  border: 0;
+  padding: 0;
+  margin: 0 0 28px;
+  min-width: 0;
+}
+
+.campo--foco legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.campo__ayuda {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 0 0 12px;
+}
+
+.foco-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.chip-preset {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.chip-preset:hover {
+  border-color: var(--sello);
+  background: var(--sello-soft);
+}
+
+.foco-fila {
+  margin-bottom: 18px;
+}
+
+.foco-fila:last-child {
+  margin-bottom: 0;
+}
+
+.foco-fila .campo__cabecera {
+  margin-bottom: 8px;
+}
+
+.campo__etiqueta--sub {
+  color: var(--ink);
+}
+
+.foco-fila__ejemplo {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+
+/* ---------- Resultados por area ---------- */
+
+.seccion-areas {
+  margin-bottom: 36px;
+}
+
+.seccion-areas h2 {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.lista-areas {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.area-item {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 2fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.area-item__nombre {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.area-item__barra {
+  display: block;
+  height: 8px;
+  background: var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.area-item__relleno {
+  display: block;
+  height: 100%;
+  background: var(--correccion);
+}
+
+.area-item__relleno.revisar {
+  background: var(--ambar);
+}
+
+.area-item__relleno.aprobado {
+  background: var(--aprobado);
+}
+
+.area-item__cuenta {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+@media (max-width: 520px) {
+  .area-item {
+    grid-template-columns: 1fr auto;
+  }
+  .area-item__barra {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}

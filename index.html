@@ -62,6 +62,52 @@
           <div class="campo__escala"><span>5</span><span>25</span></div>
         </div>
 
+        <fieldset class="campo campo--foco">
+          <legend class="campo__etiqueta">Qué querés practicar</legend>
+          <p class="campo__ayuda">
+            Repartí el 100% de los errores entre estas áreas. Subí la que tengas más floja:
+            las demás se reajustan solas.
+          </p>
+          <div class="foco-presets" role="group" aria-label="Combinaciones rápidas">
+            <button type="button" class="chip-preset" data-preset="parejo">Parejo</button>
+            <button type="button" class="chip-preset" data-preset="acentuacion">Solo acentos</button>
+            <button type="button" class="chip-preset" data-preset="puntuacion">Solo puntuación</button>
+            <button type="button" class="chip-preset" data-preset="gramatica">Solo gramática</button>
+          </div>
+          <div class="foco-fila">
+            <div class="campo__cabecera">
+              <label class="campo__etiqueta campo__etiqueta--sub" for="input-peso-acentuacion">Acentuación</label>
+              <span class="campo__valor"><span id="valor-peso-acentuacion">25</span>%</span>
+            </div>
+            <input type="range" id="input-peso-acentuacion" min="0" max="100" step="1" value="25" />
+            <p class="foco-fila__ejemplo">Tildes omitidas o de más, y tilde diacrítica (el/él, se/sé, que/qué).</p>
+          </div>
+          <div class="foco-fila">
+            <div class="campo__cabecera">
+              <label class="campo__etiqueta campo__etiqueta--sub" for="input-peso-puntuacion">Puntuación: comas y puntos</label>
+              <span class="campo__valor"><span id="valor-peso-puntuacion">25</span>%</span>
+            </div>
+            <input type="range" id="input-peso-puntuacion" min="0" max="100" step="1" value="25" />
+            <p class="foco-fila__ejemplo">Comas o puntos que faltan, y comas de más. Se marca la palabra pegada a la marca.</p>
+          </div>
+          <div class="foco-fila">
+            <div class="campo__cabecera">
+              <label class="campo__etiqueta campo__etiqueta--sub" for="input-peso-gramatica">Reglas gramaticales</label>
+              <span class="campo__valor"><span id="valor-peso-gramatica">25</span>%</span>
+            </div>
+            <input type="range" id="input-peso-gramatica" min="0" max="100" step="1" value="25" />
+            <p class="foco-fila__ejemplo">Concordancia, dequeísmo, hecho/echo, haya/halla, sino/si no, a ver/haber…</p>
+          </div>
+          <div class="foco-fila">
+            <div class="campo__cabecera">
+              <label class="campo__etiqueta campo__etiqueta--sub" for="input-peso-ortografia">Ortografía general</label>
+              <span class="campo__valor"><span id="valor-peso-ortografia">25</span>%</span>
+            </div>
+            <input type="range" id="input-peso-ortografia" min="0" max="100" step="1" value="25" />
+            <p class="foco-fila__ejemplo">b/v, g/j, c/s/z, h muda, consonantes dobles, mayúscula después de punto.</p>
+          </div>
+        </fieldset>
+
         <div class="campo">
           <div class="campo__cabecera">
             <label class="campo__etiqueta" for="input-tiempo">Tiempo disponible</label>
@@ -116,7 +162,8 @@
 
       <p class="ayuda ayuda-juego oculto" id="ayuda-corregir">
         Hacé clic en una palabra con error, escribí la versión correcta y apretá Enter.
-        Para deshacer, borrá el texto o dejala como estaba.
+        Si falta o sobra una coma o un punto, corregí la palabra pegada a la marca
+        (por ejemplo «ley,» o «ley»). Para deshacer, borrá el texto o dejala como estaba.
       </p>
       <div class="hoja">
         <p class="texto-juridico" id="texto-juego" aria-live="off"></p>
@@ -146,6 +193,12 @@
           <span class="stat__valor" id="stat-precision">0%</span>
           <span class="stat__etiqueta">Precision</span>
         </div>
+      </div>
+
+      <div class="seccion-areas">
+        <h2>Por área</h2>
+        <ul class="lista-areas" id="lista-areas"></ul>
+        <button type="button" class="boton-secundario oculto" id="boton-practicar-flojo"></button>
       </div>
 
       <div class="seccion-progreso">

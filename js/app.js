@@ -29,6 +29,81 @@
   const formConfig = document.getElementById("form-config");
   const inputsModo = document.querySelectorAll('input[name="modo"]');
 
+  // Porcentaje de errores por area. Siempre suma 100: al mover un slider los
+  // otros se reajustan en proporcion.
+  const GRUPOS = ["acentuacion", "puntuacion", "gramatica", "ortografia"];
+  const NOMBRES_GRUPO = {
+    acentuacion: "Acentuación",
+    puntuacion: "Puntuación (comas y puntos)",
+    gramatica: "Reglas gramaticales",
+    ortografia: "Ortografía general",
+  };
+  const PESOS_INICIALES = { acentuacion: 25, puntuacion: 25, gramatica: 25, ortografia: 25 };
+  const pesos = Object.assign({}, PESOS_INICIALES);
+  const inputPeso = {};
+  const valorPeso = {};
+  GRUPOS.forEach((g) => {
+    inputPeso[g] = document.getElementById(`input-peso-${g}`);
+    valorPeso[g] = document.getElementById(`valor-peso-${g}`);
+  });
+
+  function mostrarPesos() {
+    GRUPOS.forEach((g) => {
+      inputPeso[g].value = pesos[g];
+      valorPeso[g].textContent = pesos[g];
+    });
+  }
+
+  // Redondea a enteros que suman exactamente `total` (metodo del resto mayor).
+  function repartirEnteros(valores, total) {
+    const base = valores.map((v) => Math.floor(v));
+    let faltan = total - base.reduce((a, b) => a + b, 0);
+    const orden = valores.map((v, i) => ({ i, resto: v - Math.floor(v) })).sort((a, b) => b.resto - a.resto);
+    for (let k = 0; k < faltan; k++) base[orden[k % orden.length].i]++;
+    return base;
+  }
+
+  function cambiarPeso(grupo, nuevo) {
+    nuevo = Math.max(0, Math.min(100, nuevo));
+    const otros = GRUPOS.filter((g) => g !== grupo);
+    const sumaOtros = otros.reduce((acc, g) => acc + pesos[g], 0);
+    const restante = 100 - nuevo;
+    const reparto = repartirEnteros(
+      otros.map((g) => (sumaOtros > 0 ? (pesos[g] / sumaOtros) * restante : restante / otros.length)),
+      restante
+    );
+    pesos[grupo] = nuevo;
+    otros.forEach((g, i) => (pesos[g] = reparto[i]));
+    mostrarPesos();
+  }
+
+  function fijarPesos(nuevos) {
+    GRUPOS.forEach((g) => (pesos[g] = nuevos[g]));
+    mostrarPesos();
+  }
+
+  // 70% en un area y el resto repartido parejo entre las otras.
+  function enfocarEn(grupo) {
+    const valores = GRUPOS.map((g) => (g === grupo ? 70 : 10));
+    const r = repartirEnteros(valores, 100);
+    fijarPesos(Object.fromEntries(GRUPOS.map((g, i) => [g, r[i]])));
+  }
+
+  GRUPOS.forEach((g) => {
+    inputPeso[g].addEventListener("input", () => cambiarPeso(g, parseInt(inputPeso[g].value, 10)));
+  });
+
+  document.querySelectorAll(".chip-preset").forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const p = boton.dataset.preset;
+      if (p === "parejo") {
+        fijarPesos(PESOS_INICIALES);
+      } else {
+        enfocarEn(p);
+      }
+    });
+  });
+
   function modoSeleccionado() {
     const el = document.querySelector('input[name="modo"]:checked');
     return el ? el.value : "detectar";
@@ -37,8 +112,8 @@
   function actualizarSubtitulo() {
     document.getElementById("subtitulo-config").textContent =
       modoSeleccionado() === "corregir"
-        ? "Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos insertados. Encontralos y escribi la palabra correcta antes de que se cumpla el tiempo."
-        : "Vas a ver un texto real del cuadernillo de ingreso con errores ortograficos insertados. Encontralos haciendo clic antes de que se cumpla el tiempo.";
+        ? "Vas a ver un texto real del cuadernillo de ingreso con errores insertados (ortografia, acentos, puntuacion y gramatica). Encontralos y escribi la version correcta antes de que se cumpla el tiempo."
+        : "Vas a ver un texto real del cuadernillo de ingreso con errores insertados (ortografia, acentos, puntuacion y gramatica). Encontralos haciendo clic antes de que se cumpla el tiempo.";
   }
 
   inputsModo.forEach((el) => el.addEventListener("change", actualizarSubtitulo));
@@ -52,6 +127,13 @@
       if (cfg.tiempo) inputTiempo.value = cfg.tiempo;
       if (cfg.longitud) inputLongitud.value = cfg.longitud;
       if (cfg.tema !== undefined) inputTema.value = cfg.tema;
+      if (cfg.pesos && GRUPOS.every((g) => Number.isFinite(cfg.pesos[g]))) {
+        const suma = GRUPOS.reduce((acc, g) => acc + cfg.pesos[g], 0);
+        if (suma > 0) {
+          const r = repartirEnteros(GRUPOS.map((g) => (cfg.pesos[g] / suma) * 100), 100);
+          fijarPesos(Object.fromEntries(GRUPOS.map((g, i) => [g, r[i]])));
+        }
+      }
       if (cfg.modo) {
         inputsModo.forEach((el) => {
           el.checked = el.value === cfg.modo;
@@ -104,7 +186,7 @@
   function iniciarPractica(cfg) {
     const fuente = elegirTexto(cfg.tema);
     const textoRecortado = recortarTexto(fuente.texto, cfg.longitud);
-    const { tokens, errores } = generarEjercicio(textoRecortado, cfg.errores);
+    const { tokens, errores } = generarEjercicio(textoRecortado, cfg.errores, cfg.pesos);
 
     estado = {
       cfg,
@@ -323,10 +405,62 @@
     Progreso.registrarPalabrasFalladas(perdidos, estado.tema);
     actualizarContadorRepaso();
 
+    renderizarAreas(encontradosIdx);
     renderizarProgreso();
     renderizarRevision(encontradosIdx, falsosIdx, malCorregidosIdx);
     mostrarPantalla("resultados");
   }
+
+  // Aciertos por area, para ver cual es el punto mas flojo y practicarlo.
+  function renderizarAreas(encontradosIdx) {
+    const lista = document.getElementById("lista-areas");
+    const botonFlojo = document.getElementById("boton-practicar-flojo");
+    lista.innerHTML = "";
+    const stats = GRUPOS.map((g) => {
+      const delGrupo = estado.errores.filter((e) => e.grupo === g);
+      const ok = delGrupo.filter((e) => encontradosIdx.has(e.tokenIdx)).length;
+      return { g, total: delGrupo.length, ok };
+    }).filter((x) => x.total > 0);
+
+    for (const x of stats) {
+      const pct = Math.round((x.ok / x.total) * 100);
+      const li = document.createElement("li");
+      li.className = "area-item";
+      const nombre = document.createElement("span");
+      nombre.className = "area-item__nombre";
+      nombre.textContent = NOMBRES_GRUPO[x.g];
+      const barra = document.createElement("span");
+      barra.className = "area-item__barra";
+      const relleno = document.createElement("span");
+      relleno.className = "area-item__relleno" + (pct >= 90 ? " aprobado" : pct >= 60 ? " revisar" : " reforzar");
+      relleno.style.width = `${pct}%`;
+      barra.appendChild(relleno);
+      const cuenta = document.createElement("span");
+      cuenta.className = "area-item__cuenta";
+      cuenta.textContent = `${x.ok}/${x.total}`;
+      li.append(nombre, barra, cuenta);
+      lista.appendChild(li);
+    }
+
+    // el mas flojo: menor porcentaje de aciertos (a igualdad, el de mas errores)
+    const flojos = stats.filter((x) => x.ok < x.total).sort((a, b) => a.ok / a.total - b.ok / b.total || b.total - a.total);
+    if (flojos.length > 0) {
+      estado.areaFloja = flojos[0].g;
+      botonFlojo.textContent = `Practicar ${NOMBRES_GRUPO[flojos[0].g].toLowerCase()}`;
+      botonFlojo.classList.remove("oculto");
+    } else {
+      estado.areaFloja = null;
+      botonFlojo.classList.add("oculto");
+    }
+  }
+
+  document.getElementById("boton-practicar-flojo").addEventListener("click", () => {
+    if (!estado || !estado.areaFloja) return;
+    enfocarEn(estado.areaFloja);
+    const cfg = Object.assign({}, estado.cfg, { pesos: Object.assign({}, pesos) });
+    guardarConfig(cfg);
+    iniciarPractica(cfg);
+  });
 
   // ---------- Progreso (historial + palabras para repasar) ----------
 
@@ -412,7 +546,7 @@
       texto.appendChild(meta);
       texto.appendChild(definicion);
 
-      cargarDefinicion(p.correcta, definicion);
+      cargarDefinicion(p.correcta.replace(/[^\p{L}\s]/gu, "").trim(), definicion);
 
       const boton = document.createElement("button");
       boton.type = "button";
@@ -511,6 +645,7 @@
       longitud: parseInt(inputLongitud.value, 10),
       tema: inputTema.value,
       modo: modoSeleccionado(),
+      pesos: Object.assign({}, pesos),
     };
     guardarConfig(cfg);
     iniciarPractica(cfg);
