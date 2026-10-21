@@ -243,6 +243,7 @@
     renderizarTemas();
     renderizarRevision();
     registrarIntento({ ts: Date.now(), tema: cfg.tema, aciertos, total, aprobacion: cfg.aprobacion });
+    renderizarProgreso();
     App.mostrarPantalla("qaResultados");
   }
 
@@ -323,6 +324,42 @@
     const h = leer(CLAVE_HISTORIAL, []);
     h.push(resumen);
     guardar(CLAVE_HISTORIAL, h.slice(-MAX_HISTORIAL));
+  }
+
+  function renderizarProgreso() {
+    const historial = leer(CLAVE_HISTORIAL, []);
+    const resumen = $("qa-progreso-resumen");
+    const contenedor = $("qa-grafico-progreso");
+
+    if (historial.length <= 1) {
+      resumen.textContent = "Este es tu primer examen de Q&A registrado en este navegador.";
+      contenedor.textContent = "";
+      return;
+    }
+
+    const ultimos = historial.slice(-15);
+    resumen.textContent = `${historial.length} exámenes de Q&A registrados en este navegador. Mostrando los últimos ${ultimos.length}; la línea punteada marca la nota de aprobación del último.`;
+
+    const anchoBarra = 16;
+    const espacio = 6;
+    const alto = 90;
+    const ancho = ultimos.length * (anchoBarra + espacio) + espacio;
+
+    let barras = "";
+    ultimos.forEach((intento, i) => {
+      const pct = intento.total > 0 ? Math.round((intento.aciertos / intento.total) * 100) : 0;
+      const altura = Math.max(4, (pct / 100) * alto);
+      const x = espacio + i * (anchoBarra + espacio);
+      const clase = pct >= intento.aprobacion ? "aprobado" : pct >= intento.aprobacion - 20 ? "revisar" : "reforzar";
+      const actual = i === ultimos.length - 1 ? " actual" : "";
+      const fecha = new Date(intento.ts).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+      barras += `<rect x="${x}" y="${(alto - altura).toFixed(1)}" width="${anchoBarra}" height="${altura.toFixed(1)}" rx="2" class="barra-progreso ${clase}${actual}"><title>${pct}% (${intento.aciertos}/${intento.total}) · ${fecha}</title></rect>`;
+    });
+
+    const yMinimo = alto - (ultimos[ultimos.length - 1].aprobacion / 100) * alto;
+    const linea = `<line x1="0" x2="${ancho}" y1="${yMinimo.toFixed(1)}" y2="${yMinimo.toFixed(1)}" class="linea-aprobacion"/>`;
+
+    contenedor.innerHTML = `<svg viewBox="0 0 ${ancho} ${alto}" width="100%" height="90" preserveAspectRatio="none" role="img" aria-label="Nota de tus últimos exámenes">${barras}${linea}</svg>`;
   }
 
   // ---------- Eventos ----------

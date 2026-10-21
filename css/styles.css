@@ -1255,3 +1255,10 @@ button:focus-visible,
   line-height: 1.45;
   color: var(--ink-soft);
 }
+
+.linea-aprobacion {
+  stroke: var(--ink-soft);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
