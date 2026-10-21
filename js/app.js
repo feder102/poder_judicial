@@ -8,6 +8,9 @@
     juego: document.getElementById("pantalla-juego"),
     resultados: document.getElementById("pantalla-resultados"),
     repaso: document.getElementById("pantalla-repaso"),
+    qaConfig: document.getElementById("pantalla-qa-config"),
+    qaJuego: document.getElementById("pantalla-qa-juego"),
+    qaResultados: document.getElementById("pantalla-qa-resultados"),
   };
 
   function mostrarPantalla(nombre) {
@@ -16,6 +19,9 @@
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  // La seccion Q&A (js/qa.js) comparte el cambio de pantalla.
+  window.App = { mostrarPantalla };
 
   // ---------- Configuracion ----------
 

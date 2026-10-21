@@ -32,6 +32,8 @@
         <span class="contador-repaso oculto" id="contador-repaso">0</span>
       </button>
 
+      <button type="button" class="enlace-repaso" id="boton-ir-qa">Q&amp;A · Preguntas y respuestas</button>
+
       <form class="tarjeta" id="form-config">
         <fieldset class="campo campo--modo">
           <legend class="campo__etiqueta">Nivel de dificultad</legend>
@@ -250,6 +252,134 @@
         <button type="button" class="boton-secundario" id="boton-vaciar-repaso">Vaciar lista</button>
       </div>
     </section>
+
+    <!-- ============== PANTALLA: Q&A CONFIGURACION ============== -->
+    <section id="pantalla-qa-config" class="oculto">
+      <header class="membrete">
+        <span class="membrete__marca">Poder Judicial · San Juan</span>
+        <button type="button" class="boton-secundario" id="boton-qa-volver">Volver</button>
+      </header>
+
+      <h1 class="titulo">Preguntas y <em>Respuestas</em></h1>
+      <p class="subtitulo">
+        Examen multiple choice sobre el Cuadernillo 2026. Las preguntas se sortean al azar
+        y recién al final ves cuáles acertaste.
+      </p>
+
+      <form class="tarjeta" id="form-qa">
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="qa-input-cantidad">Cantidad de preguntas</label>
+            <span class="campo__valor"><span id="qa-valor-cantidad">20</span></span>
+          </div>
+          <input type="range" id="qa-input-cantidad" min="5" max="50" step="1" value="20" />
+          <div class="campo__escala"><span>5</span><span id="qa-escala-max">50</span></div>
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="qa-input-aprobacion">Nota de aprobación</label>
+            <span class="campo__valor"><span id="qa-valor-aprobacion">70</span>%</span>
+          </div>
+          <input type="range" id="qa-input-aprobacion" min="50" max="100" step="5" value="70" />
+          <div class="campo__escala"><span>50%</span><span>100%</span></div>
+          <p class="campo__ayuda" id="qa-ayuda-aprobacion"></p>
+        </div>
+
+        <div class="campo">
+          <label class="opcion-check">
+            <input type="checkbox" id="qa-input-articulo" />
+            <span>
+              <strong>Mostrar el artículo en la pregunta</strong>
+              <span class="opcion-check__desc">Si lo activás, cada pregunta indica el artículo y su título. Si no, tenés que saberlo sin pistas.</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="campo">
+          <div class="campo__cabecera">
+            <label class="campo__etiqueta" for="qa-input-tema">Tema del cuadernillo</label>
+          </div>
+          <select class="select-tema" id="qa-input-tema">
+            <option value="">Todos los temas</option>
+          </select>
+          <p class="campo__ayuda" id="qa-ayuda-disponibles"></p>
+        </div>
+
+        <div class="acciones">
+          <button type="submit" class="boton-sello">Iniciar examen</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============== PANTALLA: Q&A JUEGO ============== -->
+    <section id="pantalla-qa-juego" class="oculto">
+      <div class="barra-juego">
+        <span class="pastilla pastilla--contador">
+          <span class="pastilla__etiqueta">Pregunta</span>
+          <span class="pastilla__valor"><span id="qa-num-actual">1</span>/<span id="qa-num-total">20</span></span>
+        </span>
+        <span class="pastilla pastilla--contador">
+          <span class="pastilla__etiqueta">Respondidas</span>
+          <span class="pastilla__valor"><span id="qa-num-respondidas">0</span></span>
+        </span>
+        <button type="button" class="boton-finalizar" id="qa-boton-finalizar">Finalizar</button>
+      </div>
+
+      <div class="hoja qa-pregunta">
+        <p class="tema-actual" id="qa-tema-actual">Tema</p>
+        <p class="qa-articulo oculto" id="qa-articulo"></p>
+        <h2 class="qa-enunciado" id="qa-enunciado"></h2>
+        <div class="qa-opciones" id="qa-opciones" role="radiogroup" aria-labelledby="qa-enunciado"></div>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-secundario" id="qa-boton-anterior">Anterior</button>
+        <button type="button" class="boton-sello" id="qa-boton-siguiente">Siguiente</button>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA: Q&A RESULTADOS ============== -->
+    <section id="pantalla-qa-resultados" class="oculto">
+      <div class="veredicto">
+        <span class="sello-veredicto" id="qa-sello">APROBADO</span>
+      </div>
+
+      <div class="grilla-stats">
+        <div class="stat">
+          <span class="stat__valor" id="qa-stat-aciertos">0/0</span>
+          <span class="stat__etiqueta">Correctas</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="qa-stat-porcentaje">0%</span>
+          <span class="stat__etiqueta">Tu nota</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="qa-stat-minimo">70%</span>
+          <span class="stat__etiqueta">Nota de aprobación</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="qa-stat-blancos">0</span>
+          <span class="stat__etiqueta">Sin responder</span>
+        </div>
+      </div>
+
+      <div class="seccion-areas">
+        <h2>Por tema</h2>
+        <ul class="lista-areas" id="qa-lista-temas"></ul>
+      </div>
+
+      <div class="seccion-revision">
+        <h2>Revisión de las preguntas</h2>
+        <div id="qa-revision" class="qa-revision"></div>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-sello" id="qa-boton-repetir">Nuevo examen con mismos ajustes</button>
+        <button type="button" class="boton-secundario" id="qa-boton-config">Cambiar configuración</button>
+        <button type="button" class="boton-secundario" id="qa-boton-inicio">Volver al inicio</button>
+      </div>
+    </section>
   </main>
 
   <script src="data/textos.js"></script>
@@ -257,5 +387,7 @@
   <script src="js/progreso.js"></script>
   <script src="js/diccionario.js"></script>
   <script src="js/app.js"></script>
+  <script src="data/preguntas.js"></script>
+  <script src="js/qa.js"></script>
 </body>
 </html>
