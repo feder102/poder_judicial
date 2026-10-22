@@ -96,7 +96,7 @@
       const info = document.createElement("div");
       const nombre = document.createElement("span");
       nombre.className = "teo-modulo__nombre";
-      nombre.textContent = `Módulo ${n} · ${tema}`;
+      nombre.textContent = `Módulo ${n}: ${tema}`;
       const detalle = document.createElement("span");
       detalle.className = "teo-modulo__estado";
       detalle.textContent =
@@ -105,9 +105,9 @@
           : estado.aprobado
           ? n === 9 && estado.mejor === undefined
             ? "Completado"
-            : `Aprobado · mejor nota ${estado.mejor}%`
+            : `Aprobado, mejor nota ${estado.mejor}%`
           : estado.mejor !== undefined
-          ? `Disponible · mejor nota ${estado.mejor}%`
+          ? `Disponible, mejor nota ${estado.mejor}%`
           : "Disponible";
       info.append(nombre, detalle);
 
@@ -161,7 +161,7 @@
 
   function iniciarModulo(n, tema) {
     const items = armarItems(QA.preguntasDelTema(tema, false), PREGUNTAS_MODULO, () => `Módulo ${n}`);
-    iniciarSesion({ tipo: "modulo", modulo: n, tema, titulo: `Módulo ${n} · ${tema}`, items, segundos: 0 });
+    iniciarSesion({ tipo: "modulo", modulo: n, tema, titulo: `Módulo ${n}: ${tema}`, items, segundos: 0 });
   }
 
   function detenerTimer() {
