@@ -433,6 +433,9 @@
   });
   $("qa-boton-inicio").addEventListener("click", () => App.mostrarPantalla("config"));
 
+  // La prueba teorica (js/teorica.js) reutiliza el banco ya depurado de articulos.
+  window.QA = { preguntasDelTema, mezclar };
+
   // ---------- Arranque ----------
 
   poblarTemas();

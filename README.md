@@ -25,6 +25,15 @@ Se configura:
 
 Es un examen ciego: las respuestas se corrigen al final, con revisión pregunta por pregunta.
 
+## Prueba teórica y curso
+
+El botón **Prueba teórica y curso** reproduce el formato de verdadero o falso del reglamento:
+
+- **Simulacro**: 100 preguntas V/F, 75 minutos, 71 % para aprobar; lo no respondido cuenta como incorrecto y se corrige al final.
+- **Curso**: 9 módulos (uno por tema). Los módulos 1 al 8 tienen un cuestionario de 10 preguntas V/F; cada módulo se habilita al aprobar el anterior con 71 %. El módulo 9 no tiene cuestionario y se marca como completado.
+
+Las afirmaciones se generan del banco de Q&A: cada pregunta se muestra con una respuesta propuesta que es la correcta (verdadero) o un distractor (falso), mitad y mitad.
+
 Es un sitio estático (HTML + CSS + JS, sin build ni backend), pensado para
 servirse directamente con cualquier servidor web.
 
@@ -37,6 +46,7 @@ servirse directamente con cualquier servidor web.
 - `js/errores.js` — motor de inyección de errores ortográficos (tildes, b/v, g/j, c/s/z, h muda, consonantes dobles, ll/y, m/n, x/s)
 - `js/app.js` — estado del juego, temporizador, render y resultados
 - `js/qa.js` — sección Q&A (sorteo, examen, resultados)
+- `js/teorica.js` — simulacro de la prueba teórica y curso por módulos
 - `data/preguntas.js` — banco de preguntas multiple choice (la respuesta correcta se carga primera y se mezcla al armar el examen)
 - `data/textos.js` — 71 textos jurídicos (~400 palabras c/u) extraídos y limpiados del `CUADERNILLO-2026.pdf`, etiquetados por tema del programa
 

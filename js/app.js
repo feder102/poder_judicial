@@ -11,6 +11,9 @@
     qaConfig: document.getElementById("pantalla-qa-config"),
     qaJuego: document.getElementById("pantalla-qa-juego"),
     qaResultados: document.getElementById("pantalla-qa-resultados"),
+    teoInicio: document.getElementById("pantalla-teo-inicio"),
+    teoJuego: document.getElementById("pantalla-teo-juego"),
+    teoResultados: document.getElementById("pantalla-teo-resultados"),
   };
 
   // Seccion de la navegacion del sitio que corresponde a cada pantalla.
@@ -22,6 +25,9 @@
     qaConfig: "qa",
     qaJuego: "qa",
     qaResultados: "qa",
+    teoInicio: "teo",
+    teoJuego: "teo",
+    teoResultados: "teo",
   };
 
   function mostrarPantalla(nombre) {

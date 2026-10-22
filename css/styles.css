@@ -222,12 +222,14 @@ select {
 
 /* Durante un examen no se navega: el cronometro sigue corriendo. */
 body[data-pantalla="juego"] .sitio__nav,
-body[data-pantalla="qaJuego"] .sitio__nav {
+body[data-pantalla="qaJuego"] .sitio__nav,
+body[data-pantalla="teoJuego"] .sitio__nav {
   display: none;
 }
 
 body[data-pantalla="juego"] .sitio__en-curso,
-body[data-pantalla="qaJuego"] .sitio__en-curso {
+body[data-pantalla="qaJuego"] .sitio__en-curso,
+body[data-pantalla="teoJuego"] .sitio__en-curso {
   display: block;
 }
 
@@ -1730,4 +1732,83 @@ input[type="range"]:active::-webkit-slider-thumb {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------- Prueba teorica y curso ---------- */
+
+.envoltura:has(#pantalla-teo-juego:not(.oculto)),
+.envoltura:has(#pantalla-teo-resultados:not(.oculto)) {
+  max-width: min(1000px, 96vw);
+}
+
+.teo-titulo {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.teo-propuesta {
+  font-family: var(--body-serif);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--sello-soft);
+  border-left: 3px solid var(--sello);
+  padding: 12px 14px;
+  margin: 0 0 20px;
+}
+
+.teo-vf {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.teo-mensaje {
+  text-align: center;
+  margin: -12px auto 28px;
+}
+
+.teo-modulos {
+  list-style: none;
+  margin: 12px 0 16px;
+  padding: 0;
+}
+
+.teo-modulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.teo-modulo__nombre {
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.teo-modulo__estado {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.teo-modulo--aprobado .teo-modulo__estado {
+  color: var(--aprobado);
+}
+
+.teo-modulo--bloqueado .teo-modulo__nombre {
+  opacity: 0.5;
+}
+
+.teo-modulo button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

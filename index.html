@@ -28,6 +28,7 @@
       <nav class="sitio__nav" aria-label="Secciones">
         <button type="button" class="nav-enlace" id="nav-ortografia" data-seccion="ortografia">Ortografía</button>
         <button type="button" class="nav-enlace" id="boton-ir-qa" data-seccion="qa"><span class="solo-ancho">Preguntas y respuestas</span><span class="solo-angosto">Q&amp;A</span></button>
+        <button type="button" class="nav-enlace" id="boton-ir-teo" data-seccion="teo"><span class="solo-ancho">Prueba teórica</span><span class="solo-angosto">Teórica</span></button>
         <button type="button" class="nav-enlace" id="boton-ver-repaso" data-seccion="repaso">
           Para repasar
           <span class="contador-repaso oculto" id="contador-repaso">0</span>
@@ -484,6 +485,115 @@
         <button type="button" class="boton-secundario" id="qa-boton-inicio">Volver al inicio</button>
       </div>
     </section>
+
+    <!-- ============== PANTALLA: PRUEBA TEORICA / CURSO ============== -->
+    <section id="pantalla-teo-inicio" class="oculto">
+      <div class="cabecera-pagina">
+        <nav class="migas" aria-label="Ubicación">
+          <button type="button" class="migas__enlace" id="boton-teo-volver">Inicio</button>
+          <span class="migas__sep" aria-hidden="true">/</span>
+          <span aria-current="page">Prueba teórica</span>
+        </nav>
+        <h1 class="titulo">Prueba teórica</h1>
+        <p class="subtitulo">
+          Preguntas de verdadero o falso sobre el Cuadernillo 2026, con el mismo formato que la prueba de
+          conocimientos teóricos y el cuestionario de entrenamiento del curso.
+        </p>
+      </div>
+
+      <div class="tarjeta">
+        <h2 class="teo-titulo">Simulacro de la prueba</h2>
+        <p class="ayuda">
+          100 preguntas de verdadero o falso, 75 minutos y un mínimo de 71 % de respuestas correctas para aprobar.
+          Las preguntas sin responder cuentan como incorrectas. Se corrige al final.
+        </p>
+        <p class="ayuda" id="teo-historial-simulacro"></p>
+        <div class="acciones">
+          <button type="button" class="boton-sello" id="boton-teo-simulacro">Iniciar simulacro</button>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2 class="teo-titulo">Curso: cuestionarios de entrenamiento</h2>
+        <p class="ayuda">
+          Nueve módulos, uno por tema del programa. Cada módulo se habilita al aprobar el anterior
+          (71 % o más). Los módulos 1 al 8 tienen un cuestionario de 10 preguntas de verdadero o falso,
+          que podés repetir las veces que quieras; las preguntas se sortean cada vez.
+        </p>
+        <ul class="teo-modulos" id="teo-modulos"></ul>
+        <button type="button" class="boton-secundario" id="boton-teo-reiniciar">Reiniciar progreso del curso</button>
+      </div>
+    </section>
+
+    <section id="pantalla-teo-juego" class="oculto">
+      <div class="barra-juego">
+        <span class="pastilla pastilla--tiempo" id="teo-pastilla-tiempo">
+          <span class="pastilla__etiqueta" id="teo-etiqueta-tiempo">Tiempo</span>
+          <span class="pastilla__valor" id="teo-valor-tiempo">75:00</span>
+        </span>
+        <span class="pastilla pastilla--contador">
+          <span class="pastilla__etiqueta">Pregunta</span>
+          <span class="pastilla__valor"><span id="teo-num-actual">1</span>/<span id="teo-num-total">100</span></span>
+        </span>
+        <span class="pastilla pastilla--contador">
+          <span class="pastilla__etiqueta">Respondidas</span>
+          <span class="pastilla__valor" id="teo-num-respondidas">0</span>
+        </span>
+        <button type="button" class="boton-finalizar" id="teo-boton-finalizar">Finalizar</button>
+      </div>
+
+      <div class="hoja qa-pregunta">
+        <p class="tema-actual" id="teo-contexto">Prueba teórica</p>
+        <h2 class="qa-enunciado" id="teo-enunciado"></h2>
+        <p class="teo-propuesta" id="teo-propuesta"></p>
+        <div class="teo-vf" id="teo-vf" role="radiogroup" aria-label="Verdadero o falso">
+          <label class="qa-opcion"><input type="radio" name="teo-resp" value="1" /><span class="qa-opcion__caja"><span class="qa-opcion__letra">V</span><span>Verdadero</span></span></label>
+          <label class="qa-opcion"><input type="radio" name="teo-resp" value="0" /><span class="qa-opcion__caja"><span class="qa-opcion__letra">F</span><span>Falso</span></span></label>
+        </div>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-secundario" id="teo-boton-anterior">Anterior</button>
+        <button type="button" class="boton-sello" id="teo-boton-siguiente">Siguiente</button>
+      </div>
+    </section>
+
+    <section id="pantalla-teo-resultados" class="oculto">
+      <div class="veredicto">
+        <span class="sello-veredicto" id="teo-sello">APROBADO</span>
+      </div>
+      <p class="ayuda teo-mensaje" id="teo-mensaje"></p>
+
+      <div class="grilla-stats">
+        <div class="stat">
+          <span class="stat__valor" id="teo-stat-aciertos">0/0</span>
+          <span class="stat__etiqueta">Correctas</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="teo-stat-porcentaje">0%</span>
+          <span class="stat__etiqueta">Tu nota</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="teo-stat-minimo">71%</span>
+          <span class="stat__etiqueta">Nota de aprobación</span>
+        </div>
+        <div class="stat">
+          <span class="stat__valor" id="teo-stat-tiempo">00:00</span>
+          <span class="stat__etiqueta">Tiempo usado</span>
+        </div>
+      </div>
+
+      <div class="seccion-revision">
+        <h2>Revisión</h2>
+        <p class="ayuda">Se muestran primero las que erraste o dejaste sin responder.</p>
+        <div id="teo-revision" class="qa-revision"></div>
+      </div>
+
+      <div class="acciones-finales">
+        <button type="button" class="boton-sello" id="teo-boton-repetir">Repetir</button>
+        <button type="button" class="boton-secundario" id="teo-boton-menu">Volver al menú</button>
+      </div>
+    </section>
   </main>
 
   <footer class="pie">
@@ -500,5 +610,6 @@
   <script src="js/app.js"></script>
   <script src="data/preguntas.js"></script>
   <script src="js/qa.js"></script>
+  <script src="js/teorica.js"></script>
 </body>
 </html>
