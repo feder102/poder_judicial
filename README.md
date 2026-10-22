@@ -31,7 +31,9 @@ servirse directamente con cualquier servidor web.
 ## Estructura
 
 - `index.html` — pantallas de configuración, juego y resultados
-- `css/styles.css` — sistema visual
+- `css/styles.css` — sistema visual (portal de información pública; contrato en `DESIGN.md`)
+- `DESIGN.md` — tokens de color, tipografía y componentes que deben respetar todas las pantallas
+- `docs/capturas/` — capturas de todas las pantallas (claro, oscuro y móvil)
 - `js/errores.js` — motor de inyección de errores ortográficos (tildes, b/v, g/j, c/s/z, h muda, consonantes dobles, ll/y, m/n, x/s)
 - `js/app.js` — estado del juego, temporizador, render y resultados
 - `js/qa.js` — sección Q&A (sorteo, examen, resultados)

@@ -194,7 +194,7 @@
       caja.className = "qa-opcion__caja";
       const letra = document.createElement("span");
       letra.className = "qa-opcion__letra";
-      letra.textContent = LETRAS[i] + ".";
+      letra.textContent = LETRAS[i];
       const t = document.createElement("span");
       t.textContent = texto;
       caja.append(letra, t);
@@ -232,8 +232,20 @@
     const aprobado = (aciertos / total) * 100 >= cfg.aprobacion;
 
     const sello = $("qa-sello");
-    sello.textContent = aprobado ? "APROBADO" : "REPROBADO";
+    sello.textContent = aprobado ? "Aprobado" : "Reprobado";
     sello.className = "sello-veredicto " + (aprobado ? "sello-veredicto--aprobado" : "sello-veredicto--reprobado");
+
+    // Escala de la ficha: rojo hasta 20 puntos debajo de la nota de aprobacion
+    // (el mismo umbral que usa el historial), ambar hasta la nota, verde arriba.
+    const corteRojo = Math.max(0, cfg.aprobacion - 20);
+    $("qa-indice-valor").textContent = porcentaje;
+    $("qa-indice-marcador").style.left = `${porcentaje}%`;
+    $("qa-escala-rojo").style.width = `${corteRojo}%`;
+    $("qa-escala-ambar").style.width = `${cfg.aprobacion - corteRojo}%`;
+    $("qa-escala-verde").style.width = `${100 - cfg.aprobacion}%`;
+    $("qa-escala-linea").style.left = `${cfg.aprobacion}%`;
+    $("qa-escala-marca").style.left = `${cfg.aprobacion}%`;
+    $("qa-escala-marca").textContent = cfg.aprobacion;
 
     $("qa-stat-aciertos").textContent = `${aciertos}/${total}`;
     $("qa-stat-porcentaje").textContent = `${porcentaje}%`;
@@ -244,6 +256,7 @@
     renderizarRevision();
     registrarIntento({ ts: Date.now(), tema: cfg.tema, aciertos, total, aprobacion: cfg.aprobacion });
     renderizarProgreso();
+    renderizarHistorialLateral();
     App.mostrarPantalla("qaResultados");
   }
 
@@ -288,7 +301,12 @@
 
       const meta = document.createElement("p");
       meta.className = "qa-rev-item__meta";
-      meta.textContent = `${n + 1}. ${etiquetaArticulo(p)} · ${p.tema}`;
+      const estadoResp = document.createElement("span");
+      estadoResp.className = "qa-rev-item__estado";
+      estadoResp.textContent = ok ? "Correcta" : p.respuesta === null ? "Sin responder" : "Incorrecta";
+      const ubicacion = document.createElement("span");
+      ubicacion.textContent = `${n + 1}. ${[etiquetaArticulo(p), p.tema].filter(Boolean).join(", ")}`;
+      meta.append(estadoResp, ubicacion);
 
       const preg = document.createElement("p");
       preg.className = "qa-rev-item__pregunta";
@@ -362,6 +380,16 @@
     contenedor.innerHTML = `<svg viewBox="0 0 ${ancho} ${alto}" width="100%" height="90" preserveAspectRatio="none" role="img" aria-label="Nota de tus últimos exámenes">${barras}${linea}</svg>`;
   }
 
+  // Resumen de Q&A en la columna lateral de la pantalla inicial.
+  function renderizarHistorialLateral() {
+    const historial = leer(CLAVE_HISTORIAL, []);
+    if (historial.length === 0) return;
+    const ultimo = historial[historial.length - 1];
+    const pct = ultimo.total > 0 ? Math.round((ultimo.aciertos / ultimo.total) * 100) : 0;
+    const examenes = historial.length === 1 ? "1 examen" : `${historial.length} exámenes`;
+    $("historial-lateral-qa").textContent = `${examenes} de Q&A. En el último sacaste ${pct} sobre 100 (pedías ${ultimo.aprobacion}).`;
+  }
+
   // ---------- Eventos ----------
 
   $("boton-ir-qa").addEventListener("click", () => {
@@ -410,4 +438,7 @@
   poblarTemas();
   cargarConfig();
   actualizarLecturas();
+  renderizarHistorialLateral();
+  $("dato-preguntas").textContent = PREGUNTAS_QA.length.toLocaleString("es-AR");
+  $("dato-temas").textContent = new Set([...TEXTOS_JURIDICOS, ...PREGUNTAS_QA].map((x) => x.tema)).size;
 })();
