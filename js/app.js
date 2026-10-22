@@ -13,10 +13,27 @@
     qaResultados: document.getElementById("pantalla-qa-resultados"),
   };
 
+  // Seccion de la navegacion del sitio que corresponde a cada pantalla.
+  const SECCION_DE_PANTALLA = {
+    config: "ortografia",
+    juego: "ortografia",
+    resultados: "ortografia",
+    repaso: "repaso",
+    qaConfig: "qa",
+    qaJuego: "qa",
+    qaResultados: "qa",
+  };
+
   function mostrarPantalla(nombre) {
     for (const key in pantallas) {
       pantallas[key].classList.toggle("oculto", key !== nombre);
     }
+    // Durante un examen el CSS oculta la navegacion para no abandonar el cronometro.
+    document.body.dataset.pantalla = nombre;
+    document.querySelectorAll(".nav-enlace").forEach((el) => {
+      if (el.dataset.seccion === SECCION_DE_PANTALLA[nombre]) el.setAttribute("aria-current", "page");
+      else el.removeAttribute("aria-current");
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -388,15 +405,18 @@
     const sello = document.getElementById("sello-veredicto");
     sello.classList.remove("sello-veredicto--aprobado", "sello-veredicto--revisar", "sello-veredicto--reprobado");
     if (ratio >= 0.9) {
-      sello.textContent = "APROBADO";
+      sello.textContent = "Aprobado";
       sello.classList.add("sello-veredicto--aprobado");
     } else if (ratio >= 0.6) {
-      sello.textContent = "A REVISAR";
+      sello.textContent = "A revisar";
       sello.classList.add("sello-veredicto--revisar");
     } else {
-      sello.textContent = "A REFORZAR";
+      sello.textContent = "A reforzar";
       sello.classList.add("sello-veredicto--reprobado");
     }
+    const indice = Math.round(ratio * 100);
+    document.getElementById("indice-valor").textContent = indice;
+    document.getElementById("indice-marcador").style.left = `${indice}%`;
 
     Progreso.registrarIntento({
       ts: Date.now(),
@@ -410,6 +430,7 @@
     const perdidos = estado.errores.filter((e) => !encontradosIdx.has(e.tokenIdx));
     Progreso.registrarPalabrasFalladas(perdidos, estado.tema);
     actualizarContadorRepaso();
+    renderizarHistorialLateral();
 
     renderizarAreas(encontradosIdx);
     renderizarProgreso();
@@ -519,6 +540,20 @@
     return `hace ${dias} d`;
   }
 
+  // Resumen del historial en la columna lateral de la pantalla inicial.
+  function renderizarHistorialLateral() {
+    const historial = Progreso.obtenerHistorial();
+    const el = document.getElementById("historial-lateral");
+    if (historial.length === 0) {
+      el.textContent = "Todavía no hiciste ninguna práctica de ortografía en este navegador.";
+      return;
+    }
+    const ultimo = historial[historial.length - 1];
+    const pct = ultimo.total > 0 ? Math.round((ultimo.encontrados / ultimo.total) * 100) : 0;
+    const practicas = historial.length === 1 ? "1 práctica" : `${historial.length} prácticas`;
+    el.textContent = `${practicas} de ortografía. En la última encontraste ${ultimo.encontrados} de ${ultimo.total} errores (índice ${pct}), ${formatoRelativo(ultimo.ts)}.`;
+  }
+
   function actualizarContadorRepaso() {
     const n = Progreso.obtenerRepaso().length;
     const badge = document.getElementById("contador-repaso");
@@ -583,7 +618,7 @@
         link.href = url;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.textContent = "Buscarla igual →";
+        link.textContent = "Buscarla en el Wikcionario";
         elemento.appendChild(link);
       }
     });
@@ -673,6 +708,10 @@
   document.getElementById("boton-ver-repaso").addEventListener("click", abrirRepaso);
   document.getElementById("boton-repaso-desde-resultados").addEventListener("click", abrirRepaso);
 
+  document.getElementById("nav-ortografia").addEventListener("click", () => {
+    mostrarPantalla("config");
+  });
+
   document.getElementById("boton-repaso-volver").addEventListener("click", () => {
     mostrarPantalla("config");
   });
@@ -692,4 +731,8 @@
   actualizarSubtitulo();
   actualizarLecturas();
   actualizarContadorRepaso();
+  renderizarHistorialLateral();
+  document.getElementById("dato-textos").textContent = TEXTOS_JURIDICOS.length;
+  document.getElementById("dato-temas").textContent = new Set(TEXTOS_JURIDICOS.map((t) => t.tema)).size;
+  mostrarPantalla("config");
 })();
