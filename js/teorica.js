@@ -12,7 +12,7 @@
   const APROBACION = 71;
   const PREGUNTAS_SIMULACRO = 100;
   const MINUTOS_SIMULACRO = 75;
-  const PREGUNTAS_MODULO = 10;
+  const PREGUNTAS_MODULO = 15;
   const MAX_SIMULACROS = 10;
 
   const $ = (id) => document.getElementById(id);
