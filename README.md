@@ -29,7 +29,7 @@ Es un examen ciego: las respuestas se corrigen al final, con revisión pregunta 
 
 El botón **Prueba teórica y curso** reproduce el formato de verdadero o falso del reglamento:
 
-- **Simulacro**: 100 preguntas V/F, 75 minutos, 71 % para aprobar; lo no respondido cuenta como incorrecto y se corrige al final.
+- **Simulacro**: 100 preguntas V/F, 45 minutos, 71 % para aprobar; lo no respondido cuenta como incorrecto y se corrige al final.
 - **Curso**: 9 módulos (uno por tema). Los módulos 1 al 8 tienen un cuestionario de 10 preguntas V/F; cada módulo se habilita al aprobar el anterior con 71 %. El módulo 9 no tiene cuestionario y se marca como completado.
 
 Las afirmaciones se generan del banco de Q&A: cada pregunta se muestra con una respuesta propuesta que es la correcta (verdadero) o un distractor (falso), mitad y mitad.
