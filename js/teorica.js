@@ -2,7 +2,7 @@
 // banco de Q&A. Cada afirmacion (data/afirmaciones) tiene un hueco donde entra la
 // respuesta correcta (verdadera) o un distractor (falsa); debajo se muestra la
 // fuente del cuadernillo.
-//   - Simulacro: 100 afirmaciones, 45 minutos, 71 % para aprobar.
+//   - Simulacro: 100 afirmaciones, 75 minutos, 71 % para aprobar.
 //   - Curso: 9 modulos (uno por tema), todos habilitados desde el inicio.
 
 (function () {
@@ -11,7 +11,7 @@
   const CLAVE = "expediente_teo_v1";
   const APROBACION = 71;
   const PREGUNTAS_SIMULACRO = 100;
-  const MINUTOS_SIMULACRO = 45;
+  const MINUTOS_SIMULACRO = 75;
   const PREGUNTAS_MODULO = 10;
   const MAX_SIMULACROS = 10;
 
@@ -173,6 +173,9 @@
   function iniciarSimulacro() {
     const pool = PREGUNTAS_QA;
     const items = armarItems(pool, PREGUNTAS_SIMULACRO, (p) => p.tema);
+    // Salen en el orden del programa: Tema I, Tema II, etc.
+    const orden = temas();
+    items.sort((x, y) => orden.indexOf(x.contexto) - orden.indexOf(y.contexto));
     iniciarSesion({
       tipo: "simulacro",
       titulo: "Simulacro de la prueba teórica",
