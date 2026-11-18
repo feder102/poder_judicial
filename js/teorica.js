@@ -1,8 +1,9 @@
-// Prueba teorica y curso: preguntas de verdadero o falso armadas a partir del
-// banco de Q&A. Cada pregunta se presenta con una respuesta propuesta que es la
-// correcta (verdadero) o un distractor (falso).
-//   - Simulacro: 100 preguntas, 75 minutos, 71 % para aprobar.
-//   - Curso: 9 modulos (uno por tema); cada uno se habilita al aprobar el anterior.
+// Prueba teorica y curso: afirmaciones de verdadero o falso armadas a partir del
+// banco de Q&A. Cada afirmacion (data/afirmaciones) tiene un hueco donde entra la
+// respuesta correcta (verdadera) o un distractor (falsa); debajo se muestra la
+// fuente del cuadernillo.
+//   - Simulacro: 100 afirmaciones, 75 minutos, 71 % para aprobar.
+//   - Curso: 9 modulos (uno por tema), todos habilitados desde el inicio.
 
 (function () {
   "use strict";
@@ -45,6 +46,45 @@
     return [...new Set(PREGUNTAS_QA.map((p) => p.tema))];
   }
 
+  // Palabras que se escriben con mayuscula inicial aunque vayan en medio de la oracion.
+  const PROPIOS = /^(?:Corte|C[áa]mara|Congreso|Constituci[óo]n|Presidente|Vicepresidente|Gobernador|Vicegobernador|Ministerio|Ministro|Poder|Estado|Provincia|Naci[óo]n|Senado|Fiscal|Defensor|Defensa|Consejo|Jefe|C[óo]digo|Investigaci[óo]n|Tribunal|Juicio|H[áa]beas|Convenci[óo]n|Comisi[óo]n|Escuela|Oficina|Sala|Registro|Tesorer[íi]a|Jurado|Asesor[íi]a|Policía|Polic[íi]a|Unidad|UFI|Comit[ée]|Ciudad|Argentina|San|Santa|Buenos|Cuadernillo|Mesa|Secretar[íi]a|Instituto|Acuerdo|Acordada|Sistema|Secci[óo]n|Capital|Mujer|Segunda|Primera|Tercera|Rivera|Iglesia|J[áa]chal|Gran|Centro|Servicio|Defensores|Jueces|Juez|Corte|Colegio|Estados|Organismo|Autoridad|[A-ZÁÉÍÓÚ]{2,}|[A-Z][a-z]*[A-Z])$/;
+
+  // Palabras funcionales o verbos que, al iniciar la respuesta, van en minuscula dentro de la oracion.
+  function aMinuscula(texto) {
+    const primera = texto.split(/[\s,;:.]/)[0];
+    if (/^\d/.test(primera) || PROPIOS.test(primera) || /^Ley\s+\d/.test(texto)) return texto;
+    return texto.charAt(0).toLowerCase() + texto.slice(1);
+  }
+
+  function armarAfirmacion(p, respuesta) {
+    const plantilla = AFIRMACIONES[p.id];
+    if (!plantilla) {
+      const enunciado = p.pregunta.replace(/^¿/, "").replace(/\?$/, "");
+      return `${enunciado}: ${respuesta}.`;
+    }
+    // Si la respuesta empieza con la misma palabra que precede al hueco ("por" + "Por la..."), no se repite.
+    const previa = plantilla.match(/(\S+) \{\}/);
+    const primeraPalabra = respuesta.split(/[\s,;:.]/)[0].toLowerCase();
+    const base = previa && previa[1].toLowerCase() === primeraPalabra ? plantilla.replace(/\S+ \{\}/, "{}") : plantilla;
+    return finalizarAfirmacion(base, respuesta);
+  }
+
+  function finalizarAfirmacion(plantilla, respuesta) {
+    const i = plantilla.indexOf("{}");
+    const insertar = i === 0 || plantilla.charAt(i - 2) === "?" ? respuesta : aMinuscula(respuesta);
+    const limpia = insertar.replace(/[.]$/, "");
+    let texto = plantilla.replace("{}", limpia);
+    // Evita puntos o signos duplicados al final.
+    texto = texto.replace(/([.?!])\.$/, "$1");
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
+
+  // "Art. 74 — Competencia", "Art. 74" o solo el rotulo, segun lo que tenga la pregunta.
+  function fuenteDe(p) {
+    const parte = [p.articulo, p.titulo].filter(Boolean).join(" — ");
+    return "Cuadernillo 2026" + (parte ? `. ${parte}` : "") + ` (${p.tema.split(" — ")[0]})`;
+  }
+
   // Devuelve `cantidad` afirmaciones de verdadero/falso, mitad y mitad.
   function armarItems(pool, cantidad, contextoDe) {
     const elegidas = QA.mezclar(pool).slice(0, cantidad);
@@ -56,10 +96,11 @@
       const propuesta = verdadero ? correcta : distractores[Math.floor(Math.random() * distractores.length)];
       return {
         contexto: contextoDe(p),
-        pregunta: p.pregunta,
-        propuesta,
+        afirmacion: armarAfirmacion(p, propuesta),
+        fuente: fuenteDe(p),
         verdadero,
         correcta,
+        correccion: verdadero ? null : armarAfirmacion(p, correcta),
         explicacion: p.explicacion,
         respuesta: null,
       };
@@ -87,8 +128,7 @@
     temas().forEach((tema, i) => {
       const n = i + 1;
       const estado = datos.modulos[n] || {};
-      const anteriorAprobado = n === 1 || (datos.modulos[n - 1] && datos.modulos[n - 1].aprobado);
-      const clase = estado.aprobado ? "aprobado" : anteriorAprobado ? "disponible" : "bloqueado";
+      const clase = estado.aprobado ? "aprobado" : "disponible";
 
       const li = document.createElement("li");
       li.className = `teo-modulo teo-modulo--${clase}`;
@@ -100,34 +140,16 @@
       const detalle = document.createElement("span");
       detalle.className = "teo-modulo__estado";
       detalle.textContent =
-        clase === "bloqueado"
-          ? "Bloqueado: aprobá el módulo anterior"
-          : estado.aprobado
-          ? n === 9 && estado.mejor === undefined
-            ? "Completado"
-            : `Aprobado, mejor nota ${estado.mejor}%`
-          : estado.mejor !== undefined
-          ? `Disponible, mejor nota ${estado.mejor}%`
-          : "Disponible";
+        estado.mejor !== undefined
+          ? `${estado.aprobado ? "Aprobado" : "Todavía no aprobado"}, mejor nota ${estado.mejor}%`
+          : "Sin intentos todavía";
       info.append(nombre, detalle);
 
       const boton = document.createElement("button");
       boton.type = "button";
       boton.className = "boton-secundario";
-      boton.disabled = clase === "bloqueado";
-      if (n === 9) {
-        // El modulo 9 no tiene cuestionario de entrenamiento: solo se marca como completado.
-        boton.textContent = estado.aprobado ? "Desmarcar" : "Marcar completado";
-        boton.addEventListener("click", () => {
-          const d = leer();
-          d.modulos[9] = estado.aprobado ? {} : { aprobado: true };
-          guardar(d);
-          renderizarMenu();
-        });
-      } else {
-        boton.textContent = estado.mejor !== undefined ? "Repetir cuestionario" : "Hacer cuestionario";
-        boton.addEventListener("click", () => iniciarModulo(n, tema));
-      }
+      boton.textContent = estado.mejor !== undefined ? "Repetir cuestionario" : "Hacer cuestionario";
+      boton.addEventListener("click", () => iniciarModulo(n, tema));
       li.append(info, boton);
       lista.appendChild(li);
     });
@@ -149,7 +171,7 @@
   }
 
   function iniciarSimulacro() {
-    const pool = QA.preguntasDelTema("", false);
+    const pool = PREGUNTAS_QA;
     const items = armarItems(pool, PREGUNTAS_SIMULACRO, (p) => p.tema);
     iniciarSesion({
       tipo: "simulacro",
@@ -160,7 +182,7 @@
   }
 
   function iniciarModulo(n, tema) {
-    const items = armarItems(QA.preguntasDelTema(tema, false), PREGUNTAS_MODULO, () => `Módulo ${n}`);
+    const items = armarItems(PREGUNTAS_QA.filter((p) => p.tema === tema), PREGUNTAS_MODULO, () => `Módulo ${n}`);
     iniciarSesion({ tipo: "modulo", modulo: n, tema, titulo: `Módulo ${n}: ${tema}`, items, segundos: 0 });
   }
 
@@ -188,8 +210,8 @@
   function mostrarItem() {
     const it = sesion.items[sesion.actual];
     $("teo-num-actual").textContent = sesion.actual + 1;
-    $("teo-enunciado").textContent = it.pregunta;
-    $("teo-propuesta").textContent = `Respuesta propuesta: ${it.propuesta}`;
+    $("teo-enunciado").textContent = it.afirmacion;
+    $("teo-fuente").textContent = `Fuente: ${it.fuente}`;
     document.querySelectorAll('input[name="teo-resp"]').forEach((r) => {
       r.checked = it.respuesta !== null && String(it.respuesta ? 1 : 0) === r.value;
     });
@@ -243,10 +265,8 @@
         aprobado: !!previo.aprobado || aprobado,
       };
       mensaje = aprobado
-        ? sesion.modulo < 9
-          ? `Módulo aprobado: se habilitó el módulo ${sesion.modulo + 1}.`
-          : "Módulo aprobado."
-        : "Necesitás 71 % o más para habilitar el módulo siguiente. Podés repetir el cuestionario.";
+        ? "Módulo aprobado."
+        : "Necesitás 71 % o más para aprobar el módulo. Podés repetir el cuestionario.";
     }
     guardar(datos);
     $("teo-mensaje").textContent = mensaje;
@@ -272,23 +292,24 @@
       meta.textContent = `${n + 1}. ${it.contexto}`;
       const preg = document.createElement("p");
       preg.className = "qa-rev-item__pregunta";
-      preg.textContent = it.pregunta;
-      const prop = document.createElement("p");
-      prop.className = "qa-rev-item__resp";
-      prop.textContent = `Respuesta propuesta: ${it.propuesta}`;
+      preg.textContent = it.afirmacion;
 
       const tuya = document.createElement("p");
       tuya.className = "qa-rev-item__resp " + (ok ? "qa-rev-item__resp--ok" : "qa-rev-item__resp--mal");
       const dijo = it.respuesta === null ? "No respondiste" : `Respondiste ${it.respuesta ? "Verdadero" : "Falso"}`;
       tuya.textContent = `${dijo}. Era ${it.verdadero ? "Verdadero" : "Falso"}.`;
 
-      art.append(meta, preg, prop, tuya);
+      art.append(meta, preg, tuya);
       if (!it.verdadero) {
         const c = document.createElement("p");
         c.className = "qa-rev-item__resp qa-rev-item__resp--ok";
-        c.textContent = `Lo correcto: ${it.correcta}`;
+        c.textContent = `Lo correcto: ${it.correccion}`;
         art.appendChild(c);
       }
+      const fu = document.createElement("p");
+      fu.className = "qa-rev-item__fuente";
+      fu.textContent = `Fuente: ${it.fuente}`;
+      art.appendChild(fu);
       if (it.explicacion) {
         const e = document.createElement("p");
         e.className = "qa-rev-item__explicacion";
@@ -308,7 +329,7 @@
   $("boton-teo-volver").addEventListener("click", () => App.mostrarPantalla("config"));
   $("boton-teo-simulacro").addEventListener("click", iniciarSimulacro);
   $("boton-teo-reiniciar").addEventListener("click", () => {
-    if (!confirm("¿Reiniciar el progreso del curso? Se vuelven a bloquear los módulos 2 al 9.")) return;
+    if (!confirm("¿Reiniciar el progreso del curso? Se borran las notas de los nueve módulos.")) return;
     const d = leer();
     d.modulos = {};
     guardar(d);

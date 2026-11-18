@@ -1643,6 +1643,12 @@ input[type="range"]:active::-webkit-slider-thumb {
   color: var(--rojo);
 }
 
+.qa-rev-item__fuente {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--tinta-2);
+}
+
 .qa-rev-item__explicacion {
   margin: 10px 0 0;
   padding-top: 10px;
@@ -1748,14 +1754,10 @@ input[type="range"]:active::-webkit-slider-thumb {
   margin: 0 0 8px;
 }
 
-.teo-propuesta {
-  font-family: var(--expediente);
-  font-size: 1.05rem;
-  line-height: 1.5;
-  color: var(--tinta);
-  background: var(--accion-suave);
-  border-radius: var(--radio-md);
-  padding: 12px 14px;
+.teo-fuente {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--tinta-2);
   margin: 0 0 20px;
 }
 
@@ -1799,13 +1801,4 @@ input[type="range"]:active::-webkit-slider-thumb {
 
 .teo-modulo--aprobado .teo-modulo__estado {
   color: var(--verde);
-}
-
-.teo-modulo--bloqueado .teo-modulo__nombre {
-  opacity: 0.5;
-}
-
-.teo-modulo button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }

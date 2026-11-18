@@ -496,7 +496,7 @@
         </nav>
         <h1 class="titulo">Prueba teórica</h1>
         <p class="subtitulo">
-          Preguntas de verdadero o falso sobre el Cuadernillo 2026, con el mismo formato que la prueba de
+          Afirmaciones de verdadero o falso sobre el Cuadernillo 2026, con el mismo formato que la prueba de
           conocimientos teóricos y el cuestionario de entrenamiento del curso.
         </p>
       </div>
@@ -504,8 +504,8 @@
       <div class="tarjeta">
         <h2 class="teo-titulo">Simulacro de la prueba</h2>
         <p class="ayuda">
-          100 preguntas de verdadero o falso, 75 minutos y un mínimo de 71 % de respuestas correctas para aprobar.
-          Las preguntas sin responder cuentan como incorrectas. Se corrige al final.
+          100 afirmaciones para marcar como verdaderas o falsas, 75 minutos y un mínimo de 71 % de respuestas correctas para aprobar.
+          Debajo de cada afirmación se indica la fuente del cuadernillo. Las sin responder cuentan como incorrectas. Se corrige al final.
         </p>
         <p class="ayuda" id="teo-historial-simulacro"></p>
         <div class="acciones">
@@ -516,9 +516,9 @@
       <div class="tarjeta">
         <h2 class="teo-titulo">Curso: cuestionarios de entrenamiento</h2>
         <p class="ayuda">
-          Nueve módulos, uno por tema del programa. Cada módulo se habilita al aprobar el anterior
-          (71 % o más). Los módulos 1 al 8 tienen un cuestionario de 10 preguntas de verdadero o falso,
-          que podés repetir las veces que quieras; las preguntas se sortean cada vez.
+          Nueve módulos, uno por tema del programa, todos habilitados: podés hacerlos en el orden que quieras.
+          Cada uno tiene un cuestionario de 10 afirmaciones para marcar como verdaderas o falsas (se aprueba con
+          71 % o más). Podés repetirlo las veces que quieras; las afirmaciones se sortean cada vez.
         </p>
         <ul class="teo-modulos" id="teo-modulos"></ul>
         <button type="button" class="boton-secundario" id="boton-teo-reiniciar">Reiniciar progreso del curso</button>
@@ -545,7 +545,7 @@
       <div class="hoja qa-pregunta">
         <p class="tema-actual" id="teo-contexto">Prueba teórica</p>
         <h2 class="qa-enunciado" id="teo-enunciado"></h2>
-        <p class="teo-propuesta" id="teo-propuesta"></p>
+        <p class="teo-fuente" id="teo-fuente"></p>
         <div class="teo-vf" id="teo-vf" role="radiogroup" aria-label="Verdadero o falso">
           <label class="qa-opcion"><input type="radio" name="teo-resp" value="1" /><span class="qa-opcion__caja"><span class="qa-opcion__letra">V</span><span>Verdadero</span></span></label>
           <label class="qa-opcion"><input type="radio" name="teo-resp" value="0" /><span class="qa-opcion__caja"><span class="qa-opcion__letra">F</span><span>Falso</span></span></label>
@@ -610,6 +610,16 @@
   <script src="js/app.js"></script>
   <script src="data/preguntas.js"></script>
   <script src="js/qa.js"></script>
+  <script src="data/afirmaciones/base.js"></script>
+  <script src="data/afirmaciones/t1.js"></script>
+  <script src="data/afirmaciones/t2.js"></script>
+  <script src="data/afirmaciones/t3.js"></script>
+  <script src="data/afirmaciones/t5.js"></script>
+  <script src="data/afirmaciones/t6.js"></script>
+  <script src="data/afirmaciones/t7.js"></script>
+  <script src="data/afirmaciones/t7b.js"></script>
+  <script src="data/afirmaciones/t8.js"></script>
+  <script src="data/afirmaciones/t9.js"></script>
   <script src="js/teorica.js"></script>
 </body>
 </html>
